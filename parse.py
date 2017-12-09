@@ -159,43 +159,47 @@ def load_data(p, limit=-1):
         for row in r:
             if 'sub' in row[0]:
                 continue
-            valence = float(row[-2])
-            arousal = float(row[-1])
-            if arousal == -2 or valence == -2:
+            try:
+                valence = float(row[-2])
+                arousal = float(row[-1])
+                if arousal == -2 or valence == -2:
+                    continue
+                emotion = int(row[-3])
+                x, y, w, h = [float(row[1]), float(row[2]), float(row[3]), float(row[4])]  # x, y, w, h
+                # landmarks = []
+                # abs_landmarks = []
+                # cs = row[5].split(';')
+                # for j in range(0, len(cs), 2):
+                #     # normalise position using bounding box
+                #     abs_landmarks.append((int(float(cs[j])), int(float(cs[j + 1]))))
+                #     landmarks.append([(float(cs[j]) - x) / w, (float(cs[j + 1]) - y) / h])
+                # labelset.append((valence, arousal))
+                # fs = []
+                # fs.extend(extract_from_landmarks(landmarks))
+                # # fs.append(mouth_int(row[0], abs_landmarks))
+                # fs.extend(extract_hog_features(row[0], abs_landmarks, (int(x),int(y)), (int(w),int(h))))
+                # featureset.append(fs)
+                path = 'data/' + row[0]
+                o_path =  'data_p/' + row[0]
+                if not os.path.exists(o_path):
+                    image = cv2.imread(path)[int(y):int(y+h),int(x):int(x+w)]
+                    image = cv2.resize(image, (256,256))
+                    o_dir = '/'.join(o_path.split('/')[:-1])
+                    if not os.path.exists(o_dir):
+                        os.makedirs(o_dir)
+                    cv2.imwrite(o_path, image)
+                count += 1
+                print('Processed:', count, end="\r")
+                if limit > 0 and count == limit:  # TEMP
+                    break
+            except:
                 continue
-            emotion = int(row[-3])
-            x, y, w, h = [float(row[1]), float(row[2]), float(row[3]), float(row[4])]  # x, y, w, h
-            # landmarks = []
-            # abs_landmarks = []
-            # cs = row[5].split(';')
-            # for j in range(0, len(cs), 2):
-            #     # normalise position using bounding box
-            #     abs_landmarks.append((int(float(cs[j])), int(float(cs[j + 1]))))
-            #     landmarks.append([(float(cs[j]) - x) / w, (float(cs[j + 1]) - y) / h])
-            # labelset.append((valence, arousal))
-            # fs = []
-            # fs.extend(extract_from_landmarks(landmarks))
-            # # fs.append(mouth_int(row[0], abs_landmarks))
-            # fs.extend(extract_hog_features(row[0], abs_landmarks, (int(x),int(y)), (int(w),int(h))))
-            # featureset.append(fs)
-            path = 'data/' + row[0]
-            o_path =  'data_p/' + row[0]
-            image = cv2.imread(path)[int(y):int(y+h),int(x):int(x+w)]
-            image = cv2.resize(image, (256,256))
-            o_dir = '/'.join(o_path.split('/')[:-1])
-            if not os.path.exists(o_dir):
-                os.makedirs(o_dir)
-            cv2.imwrite(o_path, image)
-            count += 1
-            print('Processed:', count, end="\r")
-            if limit > 0 and count == limit:  # TEMP
-                break
     print('\n')
     return featureset, labelset
 
 train_f, train_l = load_data('training.csv')
 val_f, val_l = load_data('validation.csv')
-# 
+
 # clf = SVR(kernel='rbf', C=1000, gamma=0.01)
 #
 # clf.fit(train_f, np.array(train_l)[:,0])
