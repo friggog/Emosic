@@ -10,11 +10,12 @@ import Foundation
 import Vision
 
 class USEmojiViewController : AffUIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate  {
-    
-    var faceImage : UIImage?
-    var emotion: Int = 0
     @IBOutlet weak var EmotionLabel: UILabel!
     @IBOutlet weak var EmojiLabel: UILabel!
+    
+    var emotion : Int = 0
+    var faceImage : UIImage?
+    var data : [String] = []
     
     @IBAction func unwindToEmoji(unwindSegue: UIStoryboardSegue) {
         emotion += 1
@@ -84,7 +85,7 @@ class USEmojiViewController : AffUIViewController, UIImagePickerControllerDelega
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [String : Any]) {
         if let pickedImage = info[UIImagePickerControllerOriginalImage] as? UIImage,
             let face = detectFaces(image: pickedImage) {
-            self.faceImage = face
+            faceImage = face
             dismiss(animated: true, completion: {
                 self.performSegue(withIdentifier: "usResultsSegue", sender: self)
             })
@@ -99,6 +100,7 @@ class USEmojiViewController : AffUIViewController, UIImagePickerControllerDelega
             if let nextViewController = segue.destination as? USResultsViewController {
                 nextViewController.faceImage = self.faceImage
                 nextViewController.emotion = self.emotion
+                nextViewController.data = self.data
             }
         }
     }

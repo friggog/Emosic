@@ -179,7 +179,7 @@
                                 <color key="tintColor" red="0.98823529409999999" green="0.19215686269999999" blue="0.34901960780000002" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                 <state key="normal" title="Start"/>
                                 <connections>
-                                    <segue destination="dIG-aH-2bA" kind="show" identifier="usStartSegues" id="Kwx-rm-fHl"/>
+                                    <action selector="StartButtonClicked:" destination="VsZ-Qb-JPT" eventType="touchUpInside" id="zUG-89-Ucj"/>
                                 </connections>
                             </button>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="TaA-L2-rwO">
@@ -191,6 +191,15 @@
                                     <action selector="cancelButtonClicked:" destination="VsZ-Qb-JPT" eventType="touchUpInside" id="JO3-bv-np8"/>
                                 </connections>
                             </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="tao-Mm-O4f">
+                                <rect key="frame" x="340" y="20" width="30" height="30"/>
+                                <state key="normal" title="+">
+                                    <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                </state>
+                                <connections>
+                                    <action selector="MoreButtonPress:" destination="VsZ-Qb-JPT" eventType="touchUpInside" id="bIw-ch-40k"/>
+                                </connections>
+                            </button>
                         </subviews>
                         <color key="backgroundColor" red="0.98823529409999999" green="0.19215686269999999" blue="0.34901960780000002" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
@@ -198,12 +207,17 @@
                             <constraint firstItem="TaA-L2-rwO" firstAttribute="top" secondItem="Q4f-1m-QEf" secondAttribute="bottom" constant="25" id="ORP-Iy-JMC"/>
                             <constraint firstItem="TaA-L2-rwO" firstAttribute="leading" secondItem="eZY-0c-5rA" secondAttribute="leading" constant="160" id="X2S-PR-EUB"/>
                             <constraint firstItem="Q4f-1m-QEf" firstAttribute="leading" secondItem="eZY-0c-5rA" secondAttribute="leading" constant="125" id="a0g-NS-O6q"/>
+                            <constraint firstItem="tao-Mm-O4f" firstAttribute="top" secondItem="eZY-0c-5rA" secondAttribute="top" id="h73-ET-u0u"/>
                             <constraint firstItem="Q4f-1m-QEf" firstAttribute="centerX" secondItem="fNb-xL-3oz" secondAttribute="centerX" id="nYA-oS-Yue"/>
                             <constraint firstItem="eZY-0c-5rA" firstAttribute="bottom" secondItem="Q4f-1m-QEf" secondAttribute="bottom" constant="120" id="rsd-ys-6d3"/>
+                            <constraint firstItem="eZY-0c-5rA" firstAttribute="trailing" secondItem="tao-Mm-O4f" secondAttribute="trailing" constant="5" id="z3c-pt-FAp"/>
                         </constraints>
                         <viewLayoutGuide key="safeArea" id="eZY-0c-5rA"/>
                     </view>
                     <navigationItem key="navigationItem" id="HRW-O3-Y9W"/>
+                    <connections>
+                        <segue destination="dIG-aH-2bA" kind="show" identifier="usStartSegue" id="nWJ-tr-s81"/>
+                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="YkG-7t-1mr" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
@@ -314,6 +328,7 @@
                                     <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 </state>
                                 <connections>
+                                    <action selector="ContinueButtonClicked:" destination="4DT-qV-hjI" eventType="touchUpInside" id="tEZ-2n-7r3"/>
                                     <segue destination="02j-bc-Fkp" kind="show" identifier="usAnnotateSegue" id="zpy-JF-zO3"/>
                                 </connections>
                             </button>

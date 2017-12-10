@@ -30,7 +30,6 @@ class ResultsViewController: AffUIViewController, UITableViewDataSource, UITable
     }
     
     @IBAction func backButtonClick(_ sender: Any) {
-        print("BACK")
         dismiss(animated: true, completion: nil)
     }
     
