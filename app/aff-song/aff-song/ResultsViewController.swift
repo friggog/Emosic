@@ -8,28 +8,19 @@
 
 import UIKit
 import CoreML
+import Vision
 
-class ResultsViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
+class ResultsViewController: AffUIViewController, UITableViewDataSource, UITableViewDelegate {
     
-    var spotifyAuthKey : String = ""
     var faceImage : UIImage?
     var tracks : [[String]]?
     @IBOutlet var imageView: UIImageView!
-    @IBOutlet weak var BackButton: UIButton!
     @IBOutlet weak var TrackTable: UITableView!
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Do any additional setup after loading the view, typically from a nib.
-        let gradient = CAGradientLayer()
-        gradient.frame = view.bounds
-        let c1 = UIColor(red: 252.0/255.0, green: 49.0/255.0, blue: 89.0/255.0, alpha: 1.0)
-        let c2 = UIColor(red: 252.0/255.0, green: 45.0/255.0, blue: 119.0/255.0, alpha: 1.0)
-        gradient.colors = [c1.cgColor, c2.cgColor]
-        view.layer.insertSublayer(gradient, at: 0)
-        BackButton.layer.cornerRadius = BackButton.layer.frame.height/2
-        let (valence, arousal) = getAffect(image: faceImage)
         imageView.image = faceImage
+        let (valence, arousal) = getAffect(image: faceImage)
         getSongs(valence: valence, arousal: arousal, callback: {tracks in
             self.tracks = tracks
             DispatchQueue.main.async {
@@ -39,6 +30,7 @@ class ResultsViewController: UIViewController, UITableViewDataSource, UITableVie
     }
     
     @IBAction func backButtonClick(_ sender: Any) {
+        print("BACK")
         dismiss(animated: true, completion: nil)
     }
     
@@ -48,11 +40,14 @@ class ResultsViewController: UIViewController, UITableViewDataSource, UITableVie
     }
     
     func getSongs(valence : Double, arousal: Double, callback: @escaping ([[String]])->Void){
+        guard let authKey = UserDefaults.standard.string(forKey: "SpotifyAuthToken") else {
+            fatalError("Spotify auth failed")
+        }
+        
         let urlPath: String = "https://api.spotify.com/v1/recommendations?seed_genres=pop,rock,dance&valence=\(valence)&danceability=\(arousal)&limit=5&market=GB"
-        print(urlPath)
         var request: URLRequest = URLRequest(url: URL(string: urlPath)!)
         request.httpMethod = "GET"
-        request.addValue("Bearer " + self.spotifyAuthKey, forHTTPHeaderField: "Authorization")
+        request.addValue("Bearer " + authKey, forHTTPHeaderField: "Authorization")
         
         let session = URLSession.shared
         session.dataTask(with: request) {data, response, err in
@@ -74,6 +69,11 @@ class ResultsViewController: UIViewController, UITableViewDataSource, UITableVie
     
     func getAffect(image: UIImage?) -> (Double, Double) {
         // TODO CNN
+//        let model = nil
+//        let pixelBuffer = UIImage(cgImage: image.cgImage).pixelBuffer()
+//        guard let modelPrediction = try? model.prediction(image: pixelBuffer) else {
+//            fatalError("Unexpected runtime error.")
+//        }
         return (0.5, 0.5)
     }
     
@@ -95,5 +95,49 @@ class ResultsViewController: UIViewController, UITableViewDataSource, UITableVie
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         UIApplication.shared.openURL(URL(string: self.tracks![indexPath.row][2])!)
+    }
+}
+
+extension UIImage {
+    func pixelBuffer() -> CVPixelBuffer? {
+        let width = self.size.width
+        let height = self.size.height
+        let attrs = [kCVPixelBufferCGImageCompatibilityKey: kCFBooleanTrue,
+                     kCVPixelBufferCGBitmapContextCompatibilityKey: kCFBooleanTrue] as CFDictionary
+        var pixelBuffer: CVPixelBuffer?
+        let status = CVPixelBufferCreate(kCFAllocatorDefault,
+                                         Int(width),
+                                         Int(height),
+                                         kCVPixelFormatType_OneComponent8,
+                                         attrs,
+                                         &pixelBuffer)
+        
+        guard let resultPixelBuffer = pixelBuffer, status == kCVReturnSuccess else {
+            return nil
+        }
+        
+        CVPixelBufferLockBaseAddress(resultPixelBuffer, CVPixelBufferLockFlags(rawValue: 0))
+        let pixelData = CVPixelBufferGetBaseAddress(resultPixelBuffer)
+        
+        let grayColorSpace = CGColorSpaceCreateDeviceGray()
+        guard let context = CGContext(data: pixelData,
+                                      width: Int(width),
+                                      height: Int(height),
+                                      bitsPerComponent: 8,
+                                      bytesPerRow: CVPixelBufferGetBytesPerRow(resultPixelBuffer),
+                                      space: grayColorSpace,
+                                      bitmapInfo: CGImageAlphaInfo.none.rawValue) else {
+                                        return nil
+        }
+        
+        context.translateBy(x: 0, y: height)
+        context.scaleBy(x: 1.0, y: -1.0)
+        
+        UIGraphicsPushContext(context)
+        self.draw(in: CGRect(x: 0, y: 0, width: width, height: height))
+        UIGraphicsPopContext()
+        CVPixelBufferUnlockBaseAddress(resultPixelBuffer, CVPixelBufferLockFlags(rawValue: 0))
+        
+        return resultPixelBuffer
     }
 }

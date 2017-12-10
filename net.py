@@ -1,9 +1,13 @@
 from keras.preprocessing import image
 from keras.models import Sequential
 from keras.layers import Conv2D, MaxPooling2D, Activation, Dropout, Flatten, Dense
+from keras.utils.np_utils import to_categorical
 from math import floor
 import csv
 import numpy as np
+
+# TODO classifier for emotions too (use to_categorical on labels)
+CLASSIFY_OR_REGRESS = 1
 
 def load_images(paths, labels, batch_size=32):
     while True:
@@ -61,9 +65,12 @@ model.add(Dense(1024, activation='relu'))
 model.add(Dropout(0.4))
 model.add(Dense(1024, activation='relu'))
 model.add(Dropout(0.4))
-model.add(Dense(2, activation='linear'))
-
-model.compile(loss='mean_squared_error', optimizer='adam')
+if CLASSIFY_OR_REGRESS == 0:
+    model.add(Dense(7, activation='softmax'))
+    model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+else:
+    model.add(Dense(2, activation='linear'))
+    model.compile(loss='mean_squared_error', optimizer='adam')
 
 t_paths, t_labels = load_paths('training.csv')
 v_paths, v_labels = load_paths('validation.csv')
@@ -76,4 +83,8 @@ model.fit_generator(
         validation_data=load_images(v_paths,v_labels, batch_size),
         validation_steps=800 // batch_size)
 
+for k in model.layers:
+    if type(k) is keras.layers.Dropout:
+        model.layers.remove(k)
+        
 model.save_weights('aff_net.h5')

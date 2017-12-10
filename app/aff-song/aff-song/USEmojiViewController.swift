@@ -1,25 +1,75 @@
 //
-//  ViewController.swift
+//  USEmojiViewController.swift
 //  aff-song
 //
-//  Created by Charlie Hewitt on 08/12/2017.
+//  Created by Charlie Hewitt on 10/12/2017.
 //  Copyright © 2017 Charlie Hewitt. All rights reserved.
 //
 
-import UIKit
+import Foundation
 import Vision
-import CoreGraphics
 
-class ViewController: AffUIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate  {
+class USEmojiViewController : AffUIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate  {
     
     var faceImage : UIImage?
+    var emotion: Int = 0
+    @IBOutlet weak var EmotionLabel: UILabel!
+    @IBOutlet weak var EmojiLabel: UILabel!
+    
+    @IBAction func unwindToEmoji(unwindSegue: UIStoryboardSegue) {
+        emotion += 1
+        updateForEmotionChange()
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Do any additional setup after loading the view, typically from a nib.
+        updateForEmotionChange()
+    }
+
+    func updateForEmotionChange() {
+        var emotionText : String?
+        var emotionEmoji : String?
+        switch emotion {
+        case 0:
+            emotionText = "Neutral"
+            emotionEmoji = "😐"
+            break
+        case 1:
+            emotionText = "Happy"
+            emotionEmoji = "😀"
+            break
+        case 2:
+            emotionText = "Sad"
+            emotionEmoji = "😟"
+            break
+        case 3:
+            emotionText = "Suprised"
+            emotionEmoji = "😲"
+            break
+        case 4:
+            emotionText = "Afraid"
+            emotionEmoji = "😨"
+            break
+        case 5:
+            emotionText = "Disgusted"
+            emotionEmoji = "😖"
+            break
+        case 6:
+            emotionText = "Angry"
+            emotionEmoji = "😡"
+            break
+        case 7:
+            emotionText = "Contemptful"
+            emotionEmoji = "🤨"
+            break
+        default:
+            emotionText = "Error"
+            emotionEmoji = "🤪"
+        }
+        EmotionLabel.text = emotionText
+        EmojiLabel.text = emotionEmoji
     }
     
-
     @IBAction func openCameraButton(sender: AnyObject) {
         if UIImagePickerController.isSourceTypeAvailable(.camera) {
             let imagePicker = UIImagePickerController()
@@ -33,10 +83,10 @@ class ViewController: AffUIViewController, UIImagePickerControllerDelegate, UINa
     
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [String : Any]) {
         if let pickedImage = info[UIImagePickerControllerOriginalImage] as? UIImage,
-           let face = detectFaces(image: pickedImage) {
+            let face = detectFaces(image: pickedImage) {
             self.faceImage = face
             dismiss(animated: true, completion: {
-                self.performSegue(withIdentifier: "resultsViewSegue", sender: self)
+                self.performSegue(withIdentifier: "usResultsSegue", sender: self)
             })
         }
         else {
@@ -45,9 +95,10 @@ class ViewController: AffUIViewController, UIImagePickerControllerDelegate, UINa
     }
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        if segue.identifier == "resultsViewSegue" {
-            if let imageViewController = segue.destination as? ResultsViewController {
-                imageViewController.faceImage = self.faceImage
+        if segue.identifier == "usResultsSegue" {
+            if let nextViewController = segue.destination as? USResultsViewController {
+                nextViewController.faceImage = self.faceImage
+                nextViewController.emotion = self.emotion
             }
         }
     }
@@ -106,5 +157,5 @@ class ViewController: AffUIViewController, UIImagePickerControllerDelegate, UINa
             return 7;
         }
     }
+    
 }
-
