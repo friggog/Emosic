@@ -27,7 +27,7 @@ class USAnnotateViewController : AffUIViewController {
 
     @IBAction func ButtonClicked(_ sender: Any) {
         // TODO save values
-        prtin(ValenceSlider.value, ArousalSlider.value)
+        print(ValenceSlider.value, ArousalSlider.value)
         if(emotion! > 6){
             self.performSegue(withIdentifier: "usDoneSegue", sender: self)
         }
