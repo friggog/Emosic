@@ -92,6 +92,31 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		CB0DAF311FDD99D1004668A1 /* Style */ = {
+			isa = PBXGroup;
+			children = (
+				CB0DAF1B1FDD348C004668A1 /* AffUIViewController.swift */,
+				CB418F5A1FDC563800E48EF3 /* HCSStarRatingView.h */,
+				CB418F591FDC563700E48EF3 /* HCSStarRatingView.m */,
+				CB0DAF271FDD6646004668A1 /* SlideHorSegue.swift */,
+				CB0DAF2F1FDD9597004668A1 /* BorderedImageView.swift */,
+				CB0DAF1D1FDD354D004668A1 /* RoundedUIButton.swift */,
+			);
+			path = Style;
+			sourceTree = "<group>";
+		};
+		CB0DAF321FDD99F8004668A1 /* UserStudy */ = {
+			isa = PBXGroup;
+			children = (
+				CB0DAF1F1FDD554C004668A1 /* USResultsViewController.swift */,
+				CB0DAF211FDD5C63004668A1 /* USEmojiViewController.swift */,
+				CB0DAF231FDD6352004668A1 /* USAnnotateViewController.swift */,
+				CB0DAF2B1FDD685E004668A1 /* USStartViewController.swift */,
+				CB0DAF2D1FDD7497004668A1 /* USFinishViewController.swift */,
+			);
+			path = UserStudy;
+			sourceTree = "<group>";
+		};
 		CBB8702F1FDAA373004557D9 = {
 			isa = PBXGroup;
 			children = (
@@ -113,8 +138,8 @@
 		CBB8703A1FDAA373004557D9 /* aff-song */ = {
 			isa = PBXGroup;
 			children = (
-				CB418F5A1FDC563800E48EF3 /* HCSStarRatingView.h */,
-				CB418F591FDC563700E48EF3 /* HCSStarRatingView.m */,
+				CB0DAF321FDD99F8004668A1 /* UserStudy */,
+				CB0DAF311FDD99D1004668A1 /* Style */,
 				CB6ADA761FDB0E3900D36D22 /* ResultsViewController.swift */,
 				CBB8703B1FDAA373004557D9 /* AppDelegate.swift */,
 				CBB8703D1FDAA373004557D9 /* ViewController.swift */,
@@ -123,15 +148,6 @@
 				CBB870441FDAA373004557D9 /* LaunchScreen.storyboard */,
 				CBB870471FDAA373004557D9 /* Info.plist */,
 				CB418F581FDC563500E48EF3 /* aff-song-Bridging-Header.h */,
-				CB0DAF1B1FDD348C004668A1 /* AffUIViewController.swift */,
-				CB0DAF1D1FDD354D004668A1 /* RoundedUIButton.swift */,
-				CB0DAF1F1FDD554C004668A1 /* USResultsViewController.swift */,
-				CB0DAF211FDD5C63004668A1 /* USEmojiViewController.swift */,
-				CB0DAF231FDD6352004668A1 /* USAnnotateViewController.swift */,
-				CB0DAF271FDD6646004668A1 /* SlideHorSegue.swift */,
-				CB0DAF2B1FDD685E004668A1 /* USStartViewController.swift */,
-				CB0DAF2D1FDD7497004668A1 /* USFinishViewController.swift */,
-				CB0DAF2F1FDD9597004668A1 /* BorderedImageView.swift */,
 			);
 			path = "aff-song";
 			sourceTree = "<group>";
