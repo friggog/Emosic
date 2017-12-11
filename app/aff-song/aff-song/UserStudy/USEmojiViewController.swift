@@ -14,6 +14,7 @@ class USEmojiViewController : AffUIViewController, UIImagePickerControllerDelega
     @IBOutlet weak var EmojiLabel: UILabel!
     
     var emotion : Int = 0
+    var emotionLabel : Int = 0
     var faceImage : UIImage?
     var data : [String] = []
     
@@ -34,34 +35,52 @@ class USEmojiViewController : AffUIViewController, UIImagePickerControllerDelega
         case 0:
             emotionText = "Neutral"
             emotionEmoji = "😐"
+            emotionLabel = 0
             break
         case 1:
-            emotionText = "Happy"
+            emotionText = "Delighted"
             emotionEmoji = "😀"
+            emotionLabel = 1
             break
         case 2:
-            emotionText = "Sad"
-            emotionEmoji = "😟"
+            emotionText = "Happy"
+            emotionEmoji = "🙂"
+            emotionLabel = 1
             break
         case 3:
-            emotionText = "Suprised"
-            emotionEmoji = "😲"
+            emotionText = "Miserable"
+            emotionEmoji = "😞"
+            emotionLabel = 2
             break
         case 4:
-            emotionText = "Afraid"
-            emotionEmoji = "😨"
+            emotionText = "Sad"
+            emotionEmoji = "☹️"
+            emotionLabel = 2
             break
         case 5:
-            emotionText = "Disgusted"
-            emotionEmoji = "😖"
+            emotionText = "Suprised"
+            emotionEmoji = "😮"
+            emotionLabel = 3
             break
         case 6:
             emotionText = "Angry"
             emotionEmoji = "😡"
+            emotionLabel = 6
             break
         case 7:
+            emotionText = "Afraid"
+            emotionEmoji = "😰"
+            emotionLabel = 4
+            break
+        case 8:
+            emotionText = "Disgusted"
+            emotionEmoji = "😬"
+            emotionLabel = 5
+            break
+        case 9:
             emotionText = "Contemptful"
             emotionEmoji = "🤨"
+            emotionLabel = 7
             break
         default:
             emotionText = "Error"
@@ -100,6 +119,7 @@ class USEmojiViewController : AffUIViewController, UIImagePickerControllerDelega
             if let nextViewController = segue.destination as? USResultsViewController {
                 nextViewController.faceImage = self.faceImage
                 nextViewController.emotion = self.emotion
+                nextViewController.emotionLabel = self.emotionLabel
                 nextViewController.data = self.data
             }
         }
@@ -160,4 +180,12 @@ class USEmojiViewController : AffUIViewController, UIImagePickerControllerDelega
         }
     }
     
+    @IBAction func cancelButtonClicked(_ sender: Any) {
+        let alert = UIAlertController(title: "Exit User Study", message: "Are you sure you would like to exit the study?", preferredStyle: UIAlertControllerStyle.alert)
+        alert.addAction(UIAlertAction(title: "Exit", style: UIAlertActionStyle.destructive, handler: { action in
+            self.navigationController?.dismiss(animated: true, completion: nil)
+        }))
+        alert.addAction(UIAlertAction(title: "Cancel", style: UIAlertActionStyle.cancel, handler: nil))
+        self.present(alert, animated: true, completion: nil)
+    }
 }

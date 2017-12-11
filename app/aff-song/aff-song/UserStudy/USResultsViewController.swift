@@ -11,25 +11,41 @@ import Foundation
 class USResultsViewController: ResultsViewController, UINavigationControllerDelegate {
     
     var emotion: Int?
+    var emotionLabel : Int?
     var data : [String]?
+    var ratingMade = false
     @IBOutlet weak var StarRatingView: HCSStarRatingView!
     
     override func viewDidLoad() {
-        var runId = UserDefaults.standard.integer(forKey: "RunNumber")
+        let runId = UserDefaults.standard.integer(forKey: "RunNumber")
         data!.append("\(runId)")
         data!.append("\(emotion!)")
+        data!.append("\(emotionLabel!)")
         super.viewDidLoad()
     }
     
-    @IBAction func ContinueButtonClicked(_ sender: Any) {
-        data!.append("\(StarRatingView.value)")
+    @IBAction func RatingMade(_ sender: Any) {
+        ratingMade = true
     }
     
-    override func getAffect(image: UIImage?) -> (Double, Double) {
-        let (valence, arousal) : (Double, Double) = super.getAffect(image: image)
+    @IBAction func ContinueButtonClicked(_ sender: Any) {
+        if (ratingMade) {
+            data!.append("\(StarRatingView.value)")
+            performSegue(withIdentifier: "usAnnotateSegue", sender: self)
+        }
+        else {
+            let alert = UIAlertController(title: "Rating Required", message: "Please rate the recommended songs.", preferredStyle: UIAlertControllerStyle.alert)
+            alert.addAction(UIAlertAction(title: "OK", style: UIAlertActionStyle.cancel, handler: nil))
+            self.present(alert, animated: true, completion: nil)
+        }
+    }
+    
+    override func getAffect(image: UIImage?) -> (Double, Double, Int) {
+        let (valence, arousal, emotion) : (Double, Double, Int) = super.getAffect(image: image)
         data!.append("\(valence)")
         data!.append("\(arousal)")
-        return (valence, arousal)
+        data!.append("\(emotion)")
+        return (valence, arousal, emotion)
     }
     
     
@@ -42,5 +58,13 @@ class USResultsViewController: ResultsViewController, UINavigationControllerDele
             }
         }
     }
-
+    
+    @IBAction func cancelButtonClicked(_ sender: Any) {
+        let alert = UIAlertController(title: "Exit User Study", message: "Are you sure you would like to exit the study?", preferredStyle: UIAlertControllerStyle.alert)
+        alert.addAction(UIAlertAction(title: "Exit", style: UIAlertActionStyle.destructive, handler: { action in
+            self.navigationController?.dismiss(animated: true, completion: nil)
+        }))
+        alert.addAction(UIAlertAction(title: "Cancel", style: UIAlertActionStyle.cancel, handler: nil))
+        self.present(alert, animated: true, completion: nil)
+    }
 }

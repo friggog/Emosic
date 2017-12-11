@@ -20,8 +20,8 @@ class ResultsViewController: AffUIViewController, UITableViewDataSource, UITable
     override func viewDidLoad() {
         super.viewDidLoad()
         imageView.image = faceImage
-        let (valence, arousal) = getAffect(image: faceImage)
-        getSongs(valence: valence, arousal: arousal, callback: {tracks in
+        let (valence, arousal, emotion) = getAffect(image: faceImage)
+        getSongs(valence: valence, arousal: arousal, emotion: emotion, callback: {tracks in
             self.tracks = tracks
             DispatchQueue.main.async {
                 self.TrackTable.reloadData()
@@ -38,12 +38,14 @@ class ResultsViewController: AffUIViewController, UITableViewDataSource, UITable
         // Dispose of any resources that can be recreated.
     }
     
-    func getSongs(valence : Double, arousal: Double, callback: @escaping ([[String]])->Void){
+    func getSongs(valence : Double, arousal: Double, emotion: Int, callback: @escaping ([[String]])->Void){
         guard let authKey = UserDefaults.standard.string(forKey: "SpotifyAuthToken") else {
             fatalError("Spotify auth failed")
         }
         
-        let urlPath: String = "https://api.spotify.com/v1/recommendations?seed_genres=pop,rock,dance&valence=\(valence)&danceability=\(arousal)&limit=5&market=GB"
+        // TODO map emotion to genres
+        let genres = "rock,pop,dance"
+        let urlPath: String = "https://api.spotify.com/v1/recommendations?seed_genres=\(genres)&valence=\(valence)&energy=\(arousal)&limit=5&market=GB"
         var request: URLRequest = URLRequest(url: URL(string: urlPath)!)
         request.httpMethod = "GET"
         request.addValue("Bearer " + authKey, forHTTPHeaderField: "Authorization")
@@ -66,14 +68,18 @@ class ResultsViewController: AffUIViewController, UITableViewDataSource, UITable
     }
     
     
-    func getAffect(image: UIImage?) -> (Double, Double) {
-        // TODO CNN
+    func getAffect(image: UIImage?) -> (Double, Double, Int) {
+        // 0: Neutral, 1: Happiness, 2: Sadness, 3: Surprise, 4: Fear, 5: Disgust, 6: Anger, 7: Contempt, 8: None, 9: Uncertain, 10: No-Face
+        // TODO CNN predicted
 //        let model = nil
 //        let pixelBuffer = UIImage(cgImage: image.cgImage).pixelBuffer()
 //        guard let modelPrediction = try? model.prediction(image: pixelBuffer) else {
 //            fatalError("Unexpected runtime error.")
 //        }
-        return (0.5, 0.5)
+        let valence = 0.0
+        let arousal = 0.0
+        // prediction are in [-1,1] so map to [0,1]
+        return ((valence+1)/2, (arousal+1)/2, 0)
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -93,7 +99,7 @@ class ResultsViewController: AffUIViewController, UITableViewDataSource, UITable
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        UIApplication.shared.openURL(URL(string: self.tracks![indexPath.row][2])!)
+        UIApplication.shared.open(URL(string: self.tracks![indexPath.row][2])!, options: [:], completionHandler: nil)
     }
 }
 

@@ -14,7 +14,7 @@ class USStartViewController : AffUIViewController, MFMailComposeViewControllerDe
     
     @IBAction func StartButtonClicked(_ sender: Any) {
         makeDataFile()
-        var runId = UserDefaults.standard.integer(forKey: "RunNumber")
+        let runId = UserDefaults.standard.integer(forKey: "RunNumber")
         UserDefaults.standard.set(runId + 1, forKey: "RunNumber")
         performSegue(withIdentifier: "usStartSegue", sender: self)
     }
@@ -25,7 +25,7 @@ class USStartViewController : AffUIViewController, MFMailComposeViewControllerDe
         let filePath = url.path
         if !FileManager.default.fileExists(atPath: filePath) {
             do {
-                try "id, emotion, predicted_valence, predicted_arousal, rating, annotated_valence, annotated_arousal\n".write(toFile: filePath, atomically: false, encoding: .utf8)
+                try "id, us_emotion, emotion_label, predicted_valence, predicted_arousal, predicted_emotion_label, rating, annotated_valence, annotated_arousal\n".write(toFile: filePath, atomically: false, encoding: .utf8)
             }
             catch {
                 print("ERROR WRITING FILE")

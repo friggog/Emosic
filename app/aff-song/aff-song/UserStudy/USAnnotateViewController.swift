@@ -31,7 +31,7 @@ class USAnnotateViewController : AffUIViewController {
         data!.append("\(ValenceSlider.value)")
         data!.append("\(ArousalSlider.value)")
         saveData()
-        if(emotion! > 6){
+        if(emotion! == 9){
             self.performSegue(withIdentifier: "usDoneSegue", sender: self)
         }
         else {
@@ -58,5 +58,14 @@ class USAnnotateViewController : AffUIViewController {
         else {
             print("ERROR SAVING DATA")
         }
+    }
+    
+    @IBAction func cancelButtonClicked(_ sender: Any) {
+        let alert = UIAlertController(title: "Exit User Study", message: "Are you sure you would like to exit the study?", preferredStyle: UIAlertControllerStyle.alert)
+        alert.addAction(UIAlertAction(title: "Exit", style: UIAlertActionStyle.destructive, handler: { action in
+            self.navigationController?.dismiss(animated: true, completion: nil)
+        }))
+        alert.addAction(UIAlertAction(title: "Cancel", style: UIAlertActionStyle.cancel, handler: nil))
+        self.present(alert, animated: true, completion: nil)
     }
 }
