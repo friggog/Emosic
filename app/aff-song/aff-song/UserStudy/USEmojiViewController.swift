@@ -141,10 +141,14 @@ class USEmojiViewController : AffUIViewController, UIImagePickerControllerDelega
             // flip h/w as in portrait but cg image is landscape
             let imw = CGFloat(cgImage.height)
             let imh = CGFloat(cgImage.width)
-            let w = box.size.width * imw
-            let h = box.size.height * imh
-            let x = box.origin.x * imw
-            let y = box.origin.y * imh
+            var w = box.size.width * imw
+            var h = box.size.height * imh
+            // 15% expansion to match AffectNet
+            let e = CGFloat(0.15)
+            let x = box.origin.x * imw - w * e
+            let y = box.origin.y * imh - h * e
+            w *= 1 + 2*e
+            h *= 1 + 2*e
             // and fix for stupid coordinate system inconsistencies
             let cropRect = CGRect(x: imh - (y+h), y: imw - (x+w), width: h, height: w)
             let croppedCGImage: CGImage = cgImage.cropping(to: cropRect)!

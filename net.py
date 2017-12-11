@@ -5,10 +5,14 @@ from keras.utils.np_utils import to_categorical
 from math import floor
 import csv
 import numpy as np
+CLASSIFY = 0
+REGRESS = 1
 
-# TODO classifier for emotions too (use to_categorical on labels)
-CLASSIFY_OR_REGRESS = 1
 
+# OTPIONS #
+CLASSIFY_OR_REGRESS = CLASSIFY
+
+# LOADERS #
 def load_images(paths, labels, batch_size=32):
     while True:
         batch_n = 0
@@ -40,16 +44,26 @@ def load_paths(p):
                 continue
             valence = float(row[-2])
             arousal = float(row[-1])
-            if arousal == -2 or valence == -2:
-                continue
-            # emotion = int(row[-3])
+            emotion = int(row[-3])
             path =  'data_p/' + row[0]
+            if CLASSIFY_OR_REGRESS == CLASSIFY:
+                if emotion > 7:
+                    # ignore invalid emotions
+                    continue
+                labels.append(emotion)
+            else:
+                if arousal == -2 or valence == -2:
+                    # ignore invalid values
+                    continue
+                labels.append([valence, arousal])
             paths.append(path)
-            labels.append([valence, arousal])
+    if CLASSIFY_OR_REGRESS == CLASSIFY:
+        labels = to_categorical(labels, num_classes=8)
+    print(labels)
     return paths, labels
 
+# MODEL #
 model = Sequential()
-
 # TODO define model here
 model.add(Conv2D(16, (9, 9), activation='relu', input_shape=(256,256,3)))
 model.add(Conv2D(16, (9, 9), activation='relu', input_shape=(256,256,3)))
@@ -65,8 +79,8 @@ model.add(Dense(1024, activation='relu'))
 model.add(Dropout(0.4))
 model.add(Dense(1024, activation='relu'))
 model.add(Dropout(0.4))
-if CLASSIFY_OR_REGRESS == 0:
-    model.add(Dense(7, activation='softmax'))
+if CLASSIFY_OR_REGRESS == CLASSIFY:
+    model.add(Dense(8, activation='softmax'))
     model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
 else:
     model.add(Dense(2, activation='linear'))
@@ -86,5 +100,5 @@ model.fit_generator(
 for k in model.layers:
     if type(k) is keras.layers.Dropout:
         model.layers.remove(k)
-        
-model.save_weights('aff_net.h5')
+
+model.save_weights('AFF_NET_'+CLASSIFY_OR_REGRESS+'.h5')
