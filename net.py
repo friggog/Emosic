@@ -11,6 +11,10 @@ REGRESS = 1
 
 # OTPIONS #
 CLASSIFY_OR_REGRESS = CLASSIFY
+BATCH_SIZE = 32
+EPOCHS = 50
+TRAIN_STEPS = 2000
+VAL_STEPS = 800
 
 # LOADERS #
 def load_images(paths, labels, batch_size=32):
@@ -59,12 +63,11 @@ def load_paths(p):
             paths.append(path)
     if CLASSIFY_OR_REGRESS == CLASSIFY:
         labels = to_categorical(labels, num_classes=8)
-    print(labels)
     return paths, labels
 
 # MODEL #
 model = Sequential()
-# TODO define model here
+# TODO sort out model
 model.add(Conv2D(16, (9, 9), activation='relu', input_shape=(256,256,3)))
 model.add(Conv2D(16, (9, 9), activation='relu', input_shape=(256,256,3)))
 model.add(MaxPooling2D(pool_size=(2, 2)))
@@ -76,9 +79,9 @@ model.add(Conv2D(64, (3, 3), activation='relu'))
 model.add(MaxPooling2D(pool_size=(2, 2)))
 model.add(Flatten())
 model.add(Dense(1024, activation='relu'))
-model.add(Dropout(0.4))
+model.add(Dropout(0.3))
 model.add(Dense(1024, activation='relu'))
-model.add(Dropout(0.4))
+model.add(Dropout(0.3))
 if CLASSIFY_OR_REGRESS == CLASSIFY:
     model.add(Dense(8, activation='softmax'))
     model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
@@ -88,17 +91,26 @@ else:
 
 t_paths, t_labels = load_paths('training.csv')
 v_paths, v_labels = load_paths('validation.csv')
-batch_size = 32
 
 model.fit_generator(
-        load_images(t_paths,t_labels, batch_size),
-        steps_per_epoch=2000 // batch_size,
-        epochs=50,
-        validation_data=load_images(v_paths,v_labels, batch_size),
-        validation_steps=800 // batch_size)
+        load_images(t_paths, t_labels, BATCH_SIZE),
+        steps_per_epoch=TRAIN_STEPS // BATCH_SIZE,
+        epochs=EPOCHS,
+        validation_data=load_images(v_paths, v_labels, BATCH_SIZE),
+        validation_steps=VAL_STEPS // BATCH_SIZE)
 
 for k in model.layers:
     if type(k) is keras.layers.Dropout:
         model.layers.remove(k)
 
 model.save_weights('AFF_NET_'+CLASSIFY_OR_REGRESS+'.h5')
+
+# idea is to train on emotion classification + fine tune for valence/arousal??
+# for finetuning
+# model.layers.pop()
+# model.outputs = [model.layers[-1].output]
+# model.layers[-1].outbound_nodes = []
+# model.add(Dense(2, activation='linear'))
+# for layer in model.layers[:TODO]:
+#     layer.trainable = False
+# compile + fit

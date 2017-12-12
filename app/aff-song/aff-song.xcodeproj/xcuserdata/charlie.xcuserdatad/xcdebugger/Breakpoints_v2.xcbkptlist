@@ -26,11 +26,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "aff-song/UserStudy/USEmojiViewController.swift"
-            timestampString = "534713877.323947"
+            timestampString = "534716232.82799"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "162"
-            endingLineNumber = "162"
+            startingLineNumber = "158"
+            endingLineNumber = "158"
             landmarkName = "detectFaces(image:)"
             landmarkType = "7">
          </BreakpointContent>
