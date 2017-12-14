@@ -31,10 +31,10 @@ def load_images(paths, labels, batch_size=32):
             path = paths[batch_n*batch_size + i]
             img = image.load_img(path, target_size=(256, 256))
             x = image.img_to_array(img)/255
-            x = image.random_rotation(x, 10)
-            x = image.random_shift(x, 0.1, 0.1)
-            if np.random.random() < 0.5:
-                x = image.flip_axis(x, 1)
+            # x = image.random_rotation(x, 10)
+            # x = image.random_shift(x, 0.1, 0.1)
+            # if np.random.random() < 0.5:
+            #     x = image.flip_axis(x, 1)
             y = labels[batch_n*batch_size + i]
             batch_d.append(x)
             batch_l.append(y)
@@ -124,14 +124,13 @@ model.add(Dropout(0.4))
 model.add(Dense(4096, activation='relu'))
 model.add(Dropout(0.4))
 
-lr = 0.01
-sgd = SGD(lr=lr, decay=1e-6, momentum=0.9, nesterov=True)
+# sgd = SGD(lr=0.1, decay=1e-6, momentum=0.9, nesterov=True)
 if CLASSIFY_OR_REGRESS == CLASSIFY:
     model.add(Dense(8, activation='softmax'))
-    model.compile(loss='categorical_crossentropy', optimizer=sgd, metrics=['accuracy'])
+    model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
 else:
     model.add(Dense(2, activation='linear'))
-    model.compile(loss='mean_squared_error', optimizer=opt)
+    model.compile(loss='mean_squared_error', optimizer='adam')
 
 print('** LOADING DATA **')
 t_paths = np.load('training_paths.npy')
@@ -142,8 +141,12 @@ v_labels = np.load('validation_labels.npy')
 v_paths, v_labels = process_data(v_paths, v_labels)
 
 print('** FITTING MODEL **')
-def lr_schedule(epoch):
-    return lr * (0.1 ** int(epoch / 10))
+# def lr_schedule(epoch):
+#     if epoch >= 1:
+#         lr = 0.01 * (1 - epoch/EPOCHS)
+#     else:
+#         lr = 0.1
+#     return lr
 
 model.fit_generator(
         load_images(t_paths, t_labels, BATCH_SIZE),
@@ -152,7 +155,7 @@ model.fit_generator(
         epochs=EPOCHS,
         validation_data=load_images(v_paths, v_labels, BATCH_SIZE),
         validation_steps=len(v_labels),
-        callbacks=[LearningRateScheduler(lr_schedule),
+        callbacks=[#LearningRateScheduler(lr_schedule),
                    ModelCheckpoint('AFF_NET_'+str(CLASSIFY_OR_REGRESS)+'WIP.h5', save_best_only=True)])
 
 print('** EXPORTING MODEL **')
