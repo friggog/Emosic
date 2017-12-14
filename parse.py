@@ -162,9 +162,9 @@ def load_data(p, limit=-1):
             try:
                 valence = float(row[-2])
                 arousal = float(row[-1])
-                if arousal == -2 or valence == -2:
-                    continue
                 emotion = int(row[-3])
+                if (arousal == -2 or valence == -2) and emotion > 7:
+                    continue
                 x, y, w, h = [float(row[1]), float(row[2]), float(row[3]), float(row[4])]  # x, y, w, h
                 # landmarks = []
                 # abs_landmarks = []
