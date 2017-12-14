@@ -3,8 +3,9 @@ from keras.models import Sequential
 from keras.layers import Conv2D, Conv3D, MaxPooling2D, MaxPooling3D, Activation, Dropout, Flatten, Dense
 from keras.utils.np_utils import to_categorical
 from keras.optimizers import SGD, Adam
-from keras.callbacks import LearningRateScheduler
+from keras.callbacks import LearningRateScheduler, ModelCheckpoint
 from math import floor
+from sklearn.utils import class_weight
 import csv
 import numpy as np
 import os
@@ -15,7 +16,7 @@ REGRESS = 1
 
 # OTPIONS #
 CLASSIFY_OR_REGRESS = CLASSIFY
-BATCH_SIZE = 16
+BATCH_SIZE = 32
 EPOCHS = 8
 
 # LOADERS #
@@ -32,8 +33,6 @@ def load_images(paths, labels, batch_size=32):
             x = image.img_to_array(img)/255
             x = image.random_rotation(x, 10)
             x = image.random_shift(x, 0.1, 0.1)
-            # x = image.random_shear(x, 0.1)
-            x = image.random_zoom(x, (0.1,0.1))
             if np.random.random() < 0.5:
                 x = image.flip_axis(x, 1)
             y = labels[batch_n*batch_size + i]
@@ -148,18 +147,20 @@ def lr_schedule(epoch):
 
 model.fit_generator(
         load_images(t_paths, t_labels, BATCH_SIZE),
-        steps_per_epoch=len(t_labels)/BATCH_SIZE,
+        steps_per_epoch=len(t_labels)//BATCH_SIZE,
+        class_weight='auto',
         epochs=EPOCHS,
         validation_data=load_images(v_paths, v_labels, BATCH_SIZE),
         validation_steps=len(v_labels),
-        callbacks=[LearningRateScheduler(lr_schedule)])
+        callbacks=[LearningRateScheduler(lr_schedule),
+                   ModelCheckpoint('AFF_NET_'+str(CLASSIFY_OR_REGRESS)+'WIP.h5', save_best_only=True)])
 
 print('** EXPORTING MODEL **')
 for k in model.layers:
     if type(k) is keras.layers.Dropout:
         model.layers.remove(k)
 
-model.save_weights('AFF_NET_'+CLASSIFY_OR_REGRESS+'.h5')
+model.save_weights('AFF_NET_'+str(CLASSIFY_OR_REGRESS)+'.h5')
 
 # idea is to train on emotion classification + fine tune for valence/arousal??
 # for finetuning
