@@ -1,6 +1,6 @@
 from keras.preprocessing import image
 from keras.models import Sequential
-from keras.layers import Conv2D, Conv3D, MaxPooling2D, MaxPooling3D, Activation, Dropout, Flatten, Dense
+from keras.layers import Conv2D, Conv3D, MaxPooling2D, MaxPooling3D, Activation, Dropout, Flatten, Dense, BatchNormalization, AveragePooling2D
 from keras.utils.np_utils import to_categorical
 from keras.optimizers import SGD, Adam
 from keras.callbacks import LearningRateScheduler, ModelCheckpoint
@@ -16,8 +16,8 @@ REGRESS = 1
 
 # OTPIONS #
 CLASSIFY_OR_REGRESS = CLASSIFY
-BATCH_SIZE = 32
-EPOCHS = 8
+BATCH_SIZE = 256
+EPOCHS = 16
 
 # LOADERS #
 def load_images(paths, labels, batch_size=32):
@@ -29,16 +29,16 @@ def load_images(paths, labels, batch_size=32):
             if batch_n*batch_size + i > len(paths) - 1:
                 batch_n = 0
             path = paths[batch_n*batch_size + i]
-            img = image.load_img(path, target_size=(256, 256))
+            img = image.load_img(path, target_size=(96, 96))
             x = image.img_to_array(img)/255
-            # x = image.random_rotation(x, 10)
-            # x = image.random_shift(x, 0.1, 0.1)
-            # if np.random.random() < 0.5:
-            #     x = image.flip_axis(x, 1)
+            x = image.random_rotation(x, 20)
+            x = image.random_shift(x, 0.1, 0.1)
+            if np.random.random() < 0.5:
+                x = image.flip_axis(x, 1)
             y = labels[batch_n*batch_size + i]
             batch_d.append(x)
             batch_l.append(y)
-        batch_d = np.array(batch_d).reshape((batch_size, 256, 256, 3))
+        batch_d = np.array(batch_d).reshape((batch_size, 96, 96, 3))
         if CLASSIFY_OR_REGRESS == CLASSIFY:
             batch_l = np.array(batch_l).reshape((batch_size, 8))
         else:
@@ -92,39 +92,53 @@ def process_data(paths, labels):
         count += 1
         print('Processed:', count, end='\r')
     if CLASSIFY_OR_REGRESS == CLASSIFY:
+        weights = class_weight.compute_class_weight('balanced', np.unique(labels_out), labels_out)
+        weights = dict(enumerate(weights))
         labels_out = to_categorical(labels_out, num_classes=8)
+    else:
+        weights = None
     print('Processed:', count)
-    return paths_out, labels_out
+    return paths_out, labels_out, weights
 
 # MODEL #
 model = Sequential()
-# TODO sort out model
-model.add(Conv2D(32, (16, 16), input_shape=(256, 256, 3), activation='relu'))
-model.add(Conv2D(32, (16, 16), activation='relu'))
-model.add(MaxPooling2D(pool_size=(2, 2)))
-model.add(Dropout(0.1))
-model.add(Conv2D(64, (8, 8), activation='relu'))
-model.add(Conv2D(64, (8, 8), activation='relu'))
-model.add(MaxPooling2D(pool_size=(2, 2)))
-model.add(Dropout(0.1))
-model.add(Conv2D(128, (4, 4), activation='relu'))
-model.add(Conv2D(128, (4, 4), activation='relu'))
-model.add(MaxPooling2D(pool_size=(2, 2)))
-model.add(Dropout(0.2))
-model.add(Conv2D(256, (3, 3), activation='relu'))
-model.add(Conv2D(256, (3, 3), activation='relu'))
-model.add(MaxPooling2D(pool_size=(2, 2)))
-model.add(Dropout(0.2))
-model.add(Conv2D(512, (3, 3), activation='relu'))
-model.add(Conv2D(512, (3, 3), activation='relu'))
-model.add(MaxPooling2D(pool_size=(2, 2)))
+# CONV BLOCK 1
+model.add(Conv2D(32, (3, 3), input_shape=(96, 96, 3)))
+model.add(BatchNormalization(axis=-1))
+model.add(Activation('relu'))
+model.add(Conv2D(32, (3, 3)))
+model.add(BatchNormalization(axis=-1))
+model.add(Activation('relu'))
+model.add(MaxPooling2D(pool_size=(2,2)))
+# CONV BLOCK 2
+model.add(Conv2D(64,(3, 3)))
+model.add(BatchNormalization(axis=-1))
+model.add(Activation('relu'))
+model.add(Conv2D(64, (3, 3)))
+model.add(BatchNormalization(axis=-1))
+model.add(Activation('relu'))
+model.add(MaxPooling2D(pool_size=(2,2)))
+# CONV BLOCK 3
+model.add(Conv2D(128,(3, 3)))
+model.add(BatchNormalization(axis=-1))
+model.add(Activation('relu'))
+model.add(Conv2D(128, (3, 3)))
+model.add(BatchNormalization(axis=-1))
+model.add(Activation('relu'))
+model.add(MaxPooling2D(pool_size=(2,2)))
+# FLATTEN
 model.add(Flatten())
-model.add(Dense(4096, activation='relu'))
-model.add(Dropout(0.4))
-model.add(Dense(4096, activation='relu'))
-model.add(Dropout(0.4))
-
-# sgd = SGD(lr=0.1, decay=1e-6, momentum=0.9, nesterov=True)
+# DENSE 1
+model.add(Dense(128))
+model.add(BatchNormalization())
+model.add(Activation('relu'))
+model.add(Dropout(0.5))
+# DENSE 2
+model.add(Dense(128))
+model.add(BatchNormalization())
+model.add(Activation('relu'))
+model.add(Dropout(0.5))
+# OUTPUT
 if CLASSIFY_OR_REGRESS == CLASSIFY:
     model.add(Dense(8, activation='softmax'))
     model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
@@ -135,28 +149,20 @@ else:
 print('** LOADING DATA **')
 t_paths = np.load('training_paths.npy')
 t_labels = np.load('training_labels.npy')
-t_paths, t_labels = process_data(t_paths, t_labels)
+t_paths, t_labels, t_weights = process_data(t_paths, t_labels)
 v_paths = np.load('validation_paths.npy')
 v_labels = np.load('validation_labels.npy')
-v_paths, v_labels = process_data(v_paths, v_labels)
+v_paths, v_labels, v_weights = process_data(v_paths, v_labels)
 
 print('** FITTING MODEL **')
-# def lr_schedule(epoch):
-#     if epoch >= 1:
-#         lr = 0.01 * (1 - epoch/EPOCHS)
-#     else:
-#         lr = 0.1
-#     return lr
-
 model.fit_generator(
         load_images(t_paths, t_labels, BATCH_SIZE),
         steps_per_epoch=len(t_labels)//BATCH_SIZE,
-        class_weight='auto',
+        class_weight=t_weights,
         epochs=EPOCHS,
         validation_data=load_images(v_paths, v_labels, BATCH_SIZE),
-        validation_steps=len(v_labels),
-        callbacks=[#LearningRateScheduler(lr_schedule),
-                   ModelCheckpoint('AFF_NET_'+str(CLASSIFY_OR_REGRESS)+'WIP.h5', save_best_only=True)])
+        validation_steps=len(v_labels)//BATCH_SIZE,
+        callbacks=[ModelCheckpoint('AFF_NET_'+str(CLASSIFY_OR_REGRESS)+'_WIP.h5', save_best_only=True)])
 
 print('** EXPORTING MODEL **')
 for k in model.layers:
