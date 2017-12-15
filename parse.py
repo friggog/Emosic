@@ -1,15 +1,15 @@
 import csv
+import os
 from math import sqrt
 
-import os
 import cv2
 import numpy as np
+from scipy.stats import pearsonr
 from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
 from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.svm import SVC, SVR
 from sklearn.tree import DecisionTreeRegressor
-from scipy.stats import pearsonr
 
 
 def get_subimage(image, centre, theta, w, h):
@@ -23,34 +23,39 @@ def get_subimage(image, centre, theta, w, h):
     out = cv2.getRectSubPix(rotated, (w, h), centre)
     return out
 
+
 def calc_ccc(a, b):
     astd = np.std(a)
     bstd = np.std(b)
     am = np.mean(a)
     bm = np.mean(b)
-    p = pearsonr(a,b)[0]
-    o = (2*p*astd*bstd)/(pow(astd,2)+pow(bstd,2)+pow(am-bm,2))
+    p = pearsonr(a, b)[0]
+    o = (2 * p * astd * bstd) / (pow(astd, 2) + pow(bstd, 2) + pow(am - bm, 2))
     return round(o, 4)
 
-def cacl_sagr(a,b):
+
+def cacl_sagr(a, b):
     o = 0
     for i in range(len(a)):
         o += (a[i] > 0) == (b[i] > 0)
     o /= len(a)
     return round(o, 4)
 
-def calc_rmse(a,b):
-    return round(mean_squared_error(a,b), 4)
+
+def calc_rmse(a, b):
+    return round(mean_squared_error(a, b), 4)
+
 
 def print_res(p, c):
-    p1 = p#[:, 0]
-    c1 = c#[:, 0]
+    p1 = p  # [:, 0]
+    c1 = c  # [:, 0]
     # p2 = p#[:, 1]
     # c2 = c#[:, 1]
     print('Metric'.ljust(20), 'Valence'.ljust(20), 'Arousal')
-    print('RMSE'.ljust(20), str(calc_rmse(p1,c1)).ljust(20))#, calc_rmse(p2,c2))
-    print('CCC'.ljust(20), str(calc_ccc(p1,c1)).ljust(20))#, calc_ccc(p2,c2))
-    print('SAGR'.ljust(20), str(cacl_sagr(p1,c1)).ljust(20))#, cacl_sagr(p2,c2))
+    print('RMSE'.ljust(20), str(calc_rmse(p1, c1)).ljust(20))  # , calc_rmse(p2,c2))
+    print('CCC'.ljust(20), str(calc_ccc(p1, c1)).ljust(20))  # , calc_ccc(p2,c2))
+    print('SAGR'.ljust(20), str(cacl_sagr(p1, c1)).ljust(20))  # , cacl_sagr(p2,c2))
+
 
 def p_dist(a, b):
     return sqrt(pow(a[0] - b[0], 2) + pow(a[1] - b[1], 2))
@@ -110,12 +115,12 @@ def get_hogs(image, nx, ny, bins=8):
     gy = cv2.Sobel(image, cv2.CV_32F, 0, 1, ksize=1)
     mag, angle = cv2.cartToPolar(gx, gy, angleInDegrees=True)
     h, w = image.shape[:2]
-    sx, sy = int(w/nx), int(h/ny)
+    sx, sy = int(w / nx), int(h / ny)
     fs = []
     for i in range(nx):
         for j in range(ny):
-            m_hist = np.histogram(mag[j*sy:(j+1)*sy, i*sx:(i+1)*sx], bins=bins, density=True)[0]
-            a_hist = np.histogram(angle[j*sy:(j+1)*sy, i*sx:(i+1)*sx], bins=bins, density=True)[0]
+            m_hist = np.histogram(mag[j * sy:(j + 1) * sy, i * sx:(i + 1) * sx], bins=bins, density=True)[0]
+            a_hist = np.histogram(angle[j * sy:(j + 1) * sy, i * sx:(i + 1) * sx], bins=bins, density=True)[0]
             fs.extend(m_hist)
             fs.extend(a_hist)
     return fs
@@ -126,7 +131,7 @@ def extract_hog_features(path, landmarks, c, s):
     (x, y) = c
     (w, h) = s
     path = '/Volumes/Charlie Hewitt\'s HDD/Affective/Manually_Annotated_Images/' + path
-    image = cv2.imread(path) # cut out face
+    image = cv2.imread(path)  # cut out face
     grey = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     f = []
     # # EYES
@@ -137,10 +142,11 @@ def extract_hog_features(path, landmarks, c, s):
     # f.extend(get_hogs(make_box(landmarks[22:27], grey), nx=2, ny=2))
     # # MOUTH
     # f.extend(get_hogs(make_box(landmarks[48:68], grey, b=2), nx=2, ny=2))
-    face = grey[y:y+h, x:x+w]
+    face = grey[y:y + h, x:x + w]
     cv2.resize(face, (256, 256))
     f.extend(get_hogs(face, nx=16, ny=16, bins=8))
     return f
+
 
 def mouth_int(path, landmarks):
     path = 'data/' + path
@@ -180,10 +186,10 @@ def load_data(p, limit=-1):
                 # fs.extend(extract_hog_features(row[0], abs_landmarks, (int(x),int(y)), (int(w),int(h))))
                 # featureset.append(fs)
                 path = 'data/' + row[0]
-                o_path =  'data_p/' + row[0]
+                o_path = 'data_p/' + row[0]
                 if not os.path.exists(o_path):
-                    image = cv2.imread(path)[int(y):int(y+h),int(x):int(x+w)]
-                    image = cv2.resize(image, (256,256))
+                    image = cv2.imread(path)[int(y):int(y + h), int(x):int(x + w)]
+                    image = cv2.resize(image, (256, 256))
                     o_dir = '/'.join(o_path.split('/')[:-1])
                     if not os.path.exists(o_dir):
                         os.makedirs(o_dir)
