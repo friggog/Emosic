@@ -17,7 +17,7 @@ REGRESS = 1
 
 # OTPIONS #
 BATCH_SIZE = 256
-EPOCHS = 16
+EPOCHS = 24
 
 def load_images(C_or_R, paths, labels, batch_size=32):
     batch_n = 0
@@ -102,7 +102,7 @@ def process_data(C_or_R, paths, labels):
     return paths_out, labels_out, weights
 
 
-def base_model(C_or_R):
+def base_model(C_or_R, denseSize):
     model = Sequential()
     # CONV BLOCK 1
     model.add(Conv2D(32, (3, 3), input_shape=(96, 96, 3)))
@@ -131,12 +131,12 @@ def base_model(C_or_R):
     # FLATTEN
     model.add(Flatten())
     # DENSE 1
-    model.add(Dense(128))
+    model.add(Dense(denseSize))
     model.add(BatchNormalization())
     model.add(Activation('relu'))
     model.add(Dropout(0.5))
     # DENSE 2
-    model.add(Dense(128))
+    model.add(Dense(denseSize))
     model.add(BatchNormalization())
     model.add(Activation('relu'))
     model.add(Dropout(0.5))
@@ -151,39 +151,37 @@ def base_model(C_or_R):
 
 
 def fine_tune_model(C_or_R):
-    # json_file = open('AFF_NET_'+str(CLASSIFY_OR_REGRESS)+'.json', 'r')
-    # loaded_model_json = json_file.read()
-    # json_file.close()
-    # model = model_from_json(loaded_model_json)
-    model = base_model(C_or_R)
-    # for k in model.layers:
-    #     if type(k) is Dropout:
-    #         model.layers.remove(k)
-    model.load_weights('AFF_NET.h5')
-    # REMOVE DENSE LAYERS
-    for i in range(9):
+    if C_or_R == REGRESS:
+        model = base_model(C_or_R, 256)
+        model.load_weights('AFF_NET_C_WIP.h5')
+        # REMOVE CLASSIFIER LAYER
         model.layers.pop()
-    for layer in model.layers:
-        layer.trainable = False
-    model.outputs = [model.layers[-1].output]
-    model.layers[-1].outbound_nodes = []
-    # DENSE 1
-    model.add(Dense(512))
-    model.add(BatchNormalization())
-    model.add(Activation('relu'))
-    model.add(Dropout(0.5))
-    # DENSE 2
-    model.add(Dense(512))
-    model.add(BatchNormalization())
-    model.add(Activation('relu'))
-    model.add(Dropout(0.5))
-    # OUTPUT
-    if C_or_R == CLASSIFY:
-        model.add(Dense(8, activation='softmax'))
-        model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
-    else:
+        model.outputs = [model.layers[-1].output]
+        model.layers[-1].outbound_nodes = []
+        # OUTPUT
         model.add(Dense(2, activation='linear'))
         model.compile(loss='mean_squared_error', optimizer='adam')
+    else:
+        model = base_model(C_or_R, 512)
+        model.load_weights('OUT_512D.h5')
+        # REMOVE DENSE LAYERS
+        for i in range(9):
+            model.layers.pop()
+        model.outputs = [model.layers[-1].output]
+        model.layers[-1].outbound_nodes = []
+        # DENSE 1
+        model.add(Dense(256))
+        model.add(BatchNormalization())
+        model.add(Activation('relu'))
+        model.add(Dropout(0.5))
+        # # DENSE 2
+        model.add(Dense(256))
+        model.add(BatchNormalization())
+        model.add(Activation('relu'))
+        model.add(Dropout(0.5))
+        # OUTPUT
+        model.add(Dense(8, activation='softmax'))
+        model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
     return model
 
 
@@ -202,24 +200,31 @@ def train(C_or_R, mode=0):
     v_paths, v_labels, v_weights = process_data(C_or_R, v_paths, v_labels)
 
     print('** FITTING MODEL **')
-    model.fit_generator(
-        load_images(C_or_R, t_paths, t_labels, BATCH_SIZE),
-        steps_per_epoch=len(t_labels) // BATCH_SIZE,
-        class_weight=t_weights,
-        epochs=EPOCHS,
-        validation_data=load_images(C_or_R, v_paths, v_labels, BATCH_SIZE),
-        validation_steps=len(v_labels) // BATCH_SIZE,
-        callbacks=[ModelCheckpoint('AFF_NET_' + str(C_or_R) + '_WIP.h5', save_best_only=True)],
-        use_multiprocessing=True,
-        workers=4)
+    if C_or_R == CLASSIFY:
+        ns = 'C'
+        model.fit_generator(
+            load_images(C_or_R, t_paths, t_labels, BATCH_SIZE),
+            steps_per_epoch=len(t_labels) // BATCH_SIZE,
+            class_weight=t_weights,
+            epochs=EPOCHS,
+            validation_data=load_images(C_or_R, v_paths, v_labels, BATCH_SIZE),
+            validation_steps=len(v_labels) // BATCH_SIZE,
+            callbacks=[ModelCheckpoint('AFF_NET_C_WIP.h5', save_best_only=True)])
+    else:
+        ns = 'R'
+        model.fit_generator(
+            load_images(C_or_R, t_paths, t_labels, BATCH_SIZE),
+            steps_per_epoch=len(t_labels) // BATCH_SIZE,
+            epochs=EPOCHS,
+            validation_data=load_images(C_or_R, v_paths, v_labels, BATCH_SIZE),
+            validation_steps=len(v_labels) // BATCH_SIZE,
+            callbacks=[ModelCheckpoint('AFF_NET_R_WIP.h5', save_best_only=True)])
 
     print('** EXPORTING MODEL **')
-    # for k in model.layers:
-    #     if type(k) is Dropout:
-    #         model.layers.remove(k)
     model_json = model.to_json()
-    with open('AFF_NET_' + str(C_or_R) + '.json', 'w') as json_file:
+    with open('AFF_NET_' + ns + '.json', 'w') as json_file:
         json_file.write(model_json)
-    model.save_weights('AFF_NET_' + str(C_or_R) + '.h5')
+    model.save_weights('AFF_NET_' + ns + '.h5')
 
 train(CLASSIFY, mode=1)
+train(REGRESS, mode=1)
