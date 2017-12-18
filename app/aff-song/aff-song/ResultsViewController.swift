@@ -71,15 +71,17 @@ class ResultsViewController: AffUIViewController, UITableViewDataSource, UITable
     func getAffect(image: UIImage?) -> (Double, Double, Int) {
         // 0: Neutral, 1: Happiness, 2: Sadness, 3: Surprise, 4: Fear, 5: Disgust, 6: Anger, 7: Contempt, 8: None, 9: Uncertain, 10: No-Face
         // TODO CNN predicted
-//        let model = nil
-//        let pixelBuffer = UIImage(cgImage: image.cgImage).pixelBuffer()
-//        guard let modelPrediction = try? model.prediction(image: pixelBuffer) else {
-//            fatalError("Unexpected runtime error.")
-//        }
-        let valence = 0.0
-        let arousal = 0.0
+        let pixelBuffer = image?.pixelBuffer(width: 96, height: 96)
+        let classifier = AFF_NET_C_O()
+        let regressor = AFF_NET_R_O()
+        guard let predictedEmotion = try? classifier.prediction(image: pixelBuffer!),
+              let predictedValArr = try? regressor.prediction(image: pixelBuffer!) else {
+            fatalError("Unexpected runtime error.")
+        }
+        let valence = predictedValArr.valence_arousal[0].doubleValue
+        let arousal = predictedValArr.valence_arousal[1].doubleValue
         // prediction are in [-1,1] so map to [0,1]
-        return ((valence+1)/2, (arousal+1)/2, 0)
+        return ((valence+1)/2, (arousal+1)/2, Int(predictedEmotion.emotion)!)
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -104,45 +106,43 @@ class ResultsViewController: AffUIViewController, UITableViewDataSource, UITable
 }
 
 extension UIImage {
-    func pixelBuffer() -> CVPixelBuffer? {
-        let width = self.size.width
-        let height = self.size.height
+    public func pixelBuffer(width: Int, height: Int) -> CVPixelBuffer? {
+        var maybePixelBuffer: CVPixelBuffer?
         let attrs = [kCVPixelBufferCGImageCompatibilityKey: kCFBooleanTrue,
-                     kCVPixelBufferCGBitmapContextCompatibilityKey: kCFBooleanTrue] as CFDictionary
-        var pixelBuffer: CVPixelBuffer?
+                     kCVPixelBufferCGBitmapContextCompatibilityKey: kCFBooleanTrue]
         let status = CVPixelBufferCreate(kCFAllocatorDefault,
-                                         Int(width),
-                                         Int(height),
-                                         kCVPixelFormatType_OneComponent8,
-                                         attrs,
-                                         &pixelBuffer)
+                                         width,
+                                         height,
+                                         kCVPixelFormatType_32ARGB,
+                                         attrs as CFDictionary,
+                                         &maybePixelBuffer)
         
-        guard let resultPixelBuffer = pixelBuffer, status == kCVReturnSuccess else {
+        guard status == kCVReturnSuccess, let pixelBuffer = maybePixelBuffer else {
             return nil
         }
         
-        CVPixelBufferLockBaseAddress(resultPixelBuffer, CVPixelBufferLockFlags(rawValue: 0))
-        let pixelData = CVPixelBufferGetBaseAddress(resultPixelBuffer)
+        CVPixelBufferLockBaseAddress(pixelBuffer, CVPixelBufferLockFlags(rawValue: 0))
+        let pixelData = CVPixelBufferGetBaseAddress(pixelBuffer)
         
-        let grayColorSpace = CGColorSpaceCreateDeviceGray()
         guard let context = CGContext(data: pixelData,
-                                      width: Int(width),
-                                      height: Int(height),
+                                      width: width,
+                                      height: height,
                                       bitsPerComponent: 8,
-                                      bytesPerRow: CVPixelBufferGetBytesPerRow(resultPixelBuffer),
-                                      space: grayColorSpace,
-                                      bitmapInfo: CGImageAlphaInfo.none.rawValue) else {
-                                        return nil
+                                      bytesPerRow: CVPixelBufferGetBytesPerRow(pixelBuffer),
+                                      space: CGColorSpaceCreateDeviceRGB(),
+                                      bitmapInfo: CGImageAlphaInfo.noneSkipFirst.rawValue)
+            else {
+                return nil
         }
         
-        context.translateBy(x: 0, y: height)
-        context.scaleBy(x: 1.0, y: -1.0)
+        context.translateBy(x: 0, y: CGFloat(height))
+        context.scaleBy(x: 1, y: -1)
         
         UIGraphicsPushContext(context)
         self.draw(in: CGRect(x: 0, y: 0, width: width, height: height))
         UIGraphicsPopContext()
-        CVPixelBufferUnlockBaseAddress(resultPixelBuffer, CVPixelBufferLockFlags(rawValue: 0))
+        CVPixelBufferUnlockBaseAddress(pixelBuffer, CVPixelBufferLockFlags(rawValue: 0))
         
-        return resultPixelBuffer
+        return pixelBuffer
     }
 }

@@ -149,7 +149,7 @@ class USEmojiViewController : AffUIViewController, UIImagePickerControllerDelega
             let cropRect = CGRect(x: imh - (y+h), y: imw - (x+w), width: h, height: w)
             let croppedCGImage: CGImage = cgImage.cropping(to: cropRect)!
             let croppedUIImage: UIImage = UIImage(cgImage: croppedCGImage, scale: image.scale, orientation: image.imageOrientation)
-            let size = CGSize(width:256,height:256)
+            let size = CGSize(width:96,height:96)
             UIGraphicsBeginImageContextWithOptions(size, false, image.scale)
             croppedUIImage.draw(in: CGRect(origin: CGPoint.zero, size: size))
             let scaledImage = UIGraphicsGetImageFromCurrentImageContext()!

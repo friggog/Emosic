@@ -18,6 +18,8 @@
 		CB0DAF301FDD9597004668A1 /* BorderedImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0DAF2F1FDD9597004668A1 /* BorderedImageView.swift */; };
 		CB418F5B1FDC563800E48EF3 /* HCSStarRatingView.m in Sources */ = {isa = PBXBuildFile; fileRef = CB418F591FDC563700E48EF3 /* HCSStarRatingView.m */; };
 		CB6ADA771FDB0E3900D36D22 /* ResultsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB6ADA761FDB0E3900D36D22 /* ResultsViewController.swift */; };
+		CBB4CDA81FE7E5C600534FF4 /* AFF_NET_R_O.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = CBB4CDA61FE7E5C600534FF4 /* AFF_NET_R_O.mlmodel */; };
+		CBB4CDA91FE7E5C600534FF4 /* AFF_NET_C_O.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = CBB4CDA71FE7E5C600534FF4 /* AFF_NET_C_O.mlmodel */; };
 		CBB8703C1FDAA373004557D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBB8703B1FDAA373004557D9 /* AppDelegate.swift */; };
 		CBB8703E1FDAA373004557D9 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBB8703D1FDAA373004557D9 /* ViewController.swift */; };
 		CBB870411FDAA373004557D9 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = CBB8703F1FDAA373004557D9 /* Main.storyboard */; };
@@ -56,6 +58,8 @@
 		CB418F591FDC563700E48EF3 /* HCSStarRatingView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HCSStarRatingView.m; sourceTree = "<group>"; };
 		CB418F5A1FDC563800E48EF3 /* HCSStarRatingView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HCSStarRatingView.h; sourceTree = "<group>"; };
 		CB6ADA761FDB0E3900D36D22 /* ResultsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultsViewController.swift; sourceTree = "<group>"; };
+		CBB4CDA61FE7E5C600534FF4 /* AFF_NET_R_O.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; name = AFF_NET_R_O.mlmodel; path = ../../../Model_1/AFF_NET_R_O.mlmodel; sourceTree = "<group>"; };
+		CBB4CDA71FE7E5C600534FF4 /* AFF_NET_C_O.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; name = AFF_NET_C_O.mlmodel; path = ../../../Model_1/AFF_NET_C_O.mlmodel; sourceTree = "<group>"; };
 		CBB870381FDAA373004557D9 /* aff-song.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "aff-song.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		CBB8703B1FDAA373004557D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		CBB8703D1FDAA373004557D9 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -148,6 +152,8 @@
 				CBB870441FDAA373004557D9 /* LaunchScreen.storyboard */,
 				CBB870471FDAA373004557D9 /* Info.plist */,
 				CB418F581FDC563500E48EF3 /* aff-song-Bridging-Header.h */,
+				CBB4CDA71FE7E5C600534FF4 /* AFF_NET_C_O.mlmodel */,
+				CBB4CDA61FE7E5C600534FF4 /* AFF_NET_R_O.mlmodel */,
 			);
 			path = "aff-song";
 			sourceTree = "<group>";
@@ -288,6 +294,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				CB0DAF301FDD9597004668A1 /* BorderedImageView.swift in Sources */,
+				CBB4CDA91FE7E5C600534FF4 /* AFF_NET_C_O.mlmodel in Sources */,
 				CBB8703E1FDAA373004557D9 /* ViewController.swift in Sources */,
 				CB0DAF221FDD5C63004668A1 /* USEmojiViewController.swift in Sources */,
 				CBB8703C1FDAA373004557D9 /* AppDelegate.swift in Sources */,
@@ -296,6 +303,7 @@
 				CB0DAF1C1FDD348C004668A1 /* AffUIViewController.swift in Sources */,
 				CB418F5B1FDC563800E48EF3 /* HCSStarRatingView.m in Sources */,
 				CB6ADA771FDB0E3900D36D22 /* ResultsViewController.swift in Sources */,
+				CBB4CDA81FE7E5C600534FF4 /* AFF_NET_R_O.mlmodel in Sources */,
 				CB0DAF201FDD554C004668A1 /* USResultsViewController.swift in Sources */,
 				CB0DAF1E1FDD354D004668A1 /* RoundedUIButton.swift in Sources */,
 				CB0DAF2C1FDD685E004668A1 /* USStartViewController.swift in Sources */,

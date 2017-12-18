@@ -5,7 +5,7 @@ from math import floor
 import numpy as np
 from keras.callbacks import LearningRateScheduler, ModelCheckpoint
 from keras.layers import (Activation, AveragePooling2D, BatchNormalization, Conv2D, Conv3D, Dense, Dropout, Flatten, MaxPooling2D, MaxPooling3D)
-from keras.models import Sequential, model_from_json
+from keras.models import Sequential, model_from_json, load_model
 from keras.optimizers import SGD, Adam
 from keras.preprocessing import image
 from keras.utils.np_utils import to_categorical
@@ -16,10 +16,10 @@ CLASSIFY = 0
 REGRESS = 1
 
 # OTPIONS #
-BATCH_SIZE = 256
+BATCH_SIZE = 256 # TODO whatever GPU can handle
 EPOCHS = 24
 
-def load_images(C_or_R, paths, labels, batch_size=32):
+def load_images(C_or_R, paths, labels, batch_size=32, eval=False):
     batch_n = 0
     while True:
         batch_d = []
@@ -29,11 +29,12 @@ def load_images(C_or_R, paths, labels, batch_size=32):
                 batch_n = 0
             path = paths[batch_n * batch_size + i]
             img = image.load_img(path, target_size=(96, 96))
-            x = image.img_to_array(img) / 255
-            x = image.random_rotation(x, 20)
-            x = image.random_shift(x, 0.1, 0.1)
-            if np.random.random() < 0.5:
-                x = image.flip_axis(x, 1)
+            if not eval:
+                x = image.img_to_array(img) / 255
+                x = image.random_rotation(x, 20)
+                x = image.random_shift(x, 0.1, 0.1)
+                if np.random.random() < 0.5:
+                    x = image.flip_axis(x, 1)
             y = labels[batch_n * batch_size + i]
             batch_d.append(x)
             batch_l.append(y)
@@ -102,7 +103,7 @@ def process_data(C_or_R, paths, labels):
     return paths_out, labels_out, weights
 
 
-def base_model(C_or_R, denseSize):
+def base_model(C_or_R):
     model = Sequential()
     # CONV BLOCK 1
     model.add(Conv2D(32, (3, 3), input_shape=(96, 96, 3)))
@@ -128,15 +129,23 @@ def base_model(C_or_R, denseSize):
     model.add(BatchNormalization(axis=-1))
     model.add(Activation('relu'))
     model.add(MaxPooling2D(pool_size=(2, 2)))
+    # CONV BLOCK 4
+    # model.add(Conv2D(256, (3, 3)))
+    # model.add(BatchNormalization(axis=-1))
+    # model.add(Activation('relu'))
+    # model.add(Conv2D(256, (3, 3)))
+    # model.add(BatchNormalization(axis=-1))
+    # model.add(Activation('relu'))
+    # model.add(MaxPooling2D(pool_size=(2,2)))
     # FLATTEN
     model.add(Flatten())
     # DENSE 1
-    model.add(Dense(denseSize))
+    model.add(Dense(256))
     model.add(BatchNormalization())
     model.add(Activation('relu'))
     model.add(Dropout(0.5))
     # DENSE 2
-    model.add(Dense(denseSize))
+    model.add(Dense(256))
     model.add(BatchNormalization())
     model.add(Activation('relu'))
     model.add(Dropout(0.5))
@@ -152,8 +161,8 @@ def base_model(C_or_R, denseSize):
 
 def fine_tune_model(C_or_R):
     if C_or_R == REGRESS:
-        model = base_model(C_or_R, 256)
-        model.load_weights('AFF_NET_C_WIP.h5')
+        model = base_model(CLASSIFY, 256)
+        model.load_weights('OUT_256D.h5')
         # REMOVE CLASSIFIER LAYER
         model.layers.pop()
         model.outputs = [model.layers[-1].output]
@@ -162,8 +171,8 @@ def fine_tune_model(C_or_R):
         model.add(Dense(2, activation='linear'))
         model.compile(loss='mean_squared_error', optimizer='adam')
     else:
-        model = base_model(C_or_R, 512)
-        model.load_weights('OUT_512D.h5')
+        model = base_model(C_or_R, 256)
+        model.load_weights('OUT_256D.h5')
         # REMOVE DENSE LAYERS
         for i in range(9):
             model.layers.pop()
@@ -184,6 +193,33 @@ def fine_tune_model(C_or_R):
         model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
     return model
 
+
+def eval(C_or_R):
+    # model = base_model(C_or_R, 256)
+    model = load_model('1/AFF_NET_C_O.h5')
+    # for layer in model.layers:
+        # if type(layer) is Dropout:
+            # model.layers.remove(layer)
+    v_paths = np.load('validation_paths.npy')
+    v_labels = np.load('validation_labels.npy')
+    v_paths, v_labels, v_weights = process_data(C_or_R, v_paths, v_labels)
+    res = model.evaluate_generator(load_images(C_or_R, v_paths, v_labels, BATCH_SIZE, eval=True), 
+                                   steps=len(v_labels) // BATCH_SIZE)
+    print('Accuracy:', res[1])
+    
+    
+def load_and_save():
+    # with open ('.', 'r') as json:
+    #     data = ''.join(json.readlines())
+    #     model = model_from_json(data)
+    # model = load_model('AFF_NET_R_WIP.h5')
+    model = base_model(REGRESS)
+    # model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+    model.load_weights('AFF_NET_R_WIP.h5')
+    for layer in model.layers:
+        if type(layer) is Dropout:
+            model.layers.remove(layer)
+    model.save('AFF_NET_R_O.h5')
 
 def train(C_or_R, mode=0):
     if mode == 0:
@@ -209,11 +245,11 @@ def train(C_or_R, mode=0):
             epochs=EPOCHS,
             validation_data=load_images(C_or_R, v_paths, v_labels, BATCH_SIZE),
             validation_steps=len(v_labels) // BATCH_SIZE,
-            callbacks=[ModelCheckpoint('AFF_NET_C_WIP.h5', save_best_only=True)])
+            callbacks=[ModelCheckpoint('AFF_NET_C_WIP.h5', monitor='val_acc', save_best_only=True)])
     else:
         ns = 'R'
         model.fit_generator(
-            load_images(C_or_R, t_paths, t_labels, BATCH_SIZE),
+            load_images(C_or_R, t_paths, t_labels, BATCH_SIZE, eval=True),
             steps_per_epoch=len(t_labels) // BATCH_SIZE,
             epochs=EPOCHS,
             validation_data=load_images(C_or_R, v_paths, v_labels, BATCH_SIZE),
@@ -221,10 +257,17 @@ def train(C_or_R, mode=0):
             callbacks=[ModelCheckpoint('AFF_NET_R_WIP.h5', save_best_only=True)])
 
     print('** EXPORTING MODEL **')
+    for layer in model.layers:
+        if type(layer) is Dropout:
+            model.layers.remove(layer)
     model_json = model.to_json()
-    with open('AFF_NET_' + ns + '.json', 'w') as json_file:
+    with open('AFF_NET_' + ns + '_ARCH.json', 'w') as json_file:
         json_file.write(model_json)
-    model.save_weights('AFF_NET_' + ns + '.h5')
+    model.save_weights('AFF_NET_' + ns + '_WEIGHTS.h5')
+    model.save('AFF_NET_' + ns + '_FULL.h5')
 
-train(CLASSIFY, mode=1)
-train(REGRESS, mode=1)
+# eval(CLASSIFY)
+# train(CLASSIFY, mode=0)
+# train(REGRESS, mode=1)
+# load_and_save()
+# eval(CLASSIFY)
