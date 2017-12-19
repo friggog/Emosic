@@ -40,7 +40,11 @@ class ViewController: AffUIViewController, UIImagePickerControllerDelegate, UINa
             })
         }
         else {
-            dismiss(animated: true, completion: nil)
+            let alert = UIAlertController(title: "No Face Detected", message: "Please ensure your face is clearly visible in the image.", preferredStyle: UIAlertControllerStyle.alert)
+            alert.addAction(UIAlertAction(title: "OK", style: UIAlertActionStyle.cancel, handler: nil))
+            self.dismiss(animated: true, completion: {
+                self.present(alert, animated: true, completion: nil)
+            })
         }
     }
     
@@ -76,7 +80,7 @@ class ViewController: AffUIViewController, UIImagePickerControllerDelegate, UINa
             let cropRect = CGRect(x: imh - (y+h), y: imw - (x+w), width: h, height: w)
             let croppedCGImage: CGImage = cgImage.cropping(to: cropRect)!
             let croppedUIImage: UIImage = UIImage(cgImage: croppedCGImage, scale: image.scale, orientation: image.imageOrientation)
-            let size = CGSize(width:96,height:96)
+            let size = CGSize(width:310, height:310)
             UIGraphicsBeginImageContextWithOptions(size, false, image.scale)
             croppedUIImage.draw(in: CGRect(origin: CGPoint.zero, size: size))
             let scaledImage = UIGraphicsGetImageFromCurrentImageContext()!

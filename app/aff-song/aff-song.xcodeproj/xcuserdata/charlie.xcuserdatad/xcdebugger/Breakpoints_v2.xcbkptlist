@@ -10,7 +10,7 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "aff-song/ResultsViewController.swift"
-            timestampString = "535292240.854382"
+            timestampString = "535399313.377464"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "6"
@@ -26,11 +26,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "aff-song/UserStudy/USEmojiViewController.swift"
-            timestampString = "535292240.854747"
+            timestampString = "535399313.377534"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "158"
-            endingLineNumber = "158"
+            startingLineNumber = "162"
+            endingLineNumber = "162"
             landmarkName = "detectFaces(image:)"
             landmarkType = "7">
          </BreakpointContent>

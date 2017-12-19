@@ -83,7 +83,7 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" scrollEnabled="NO" dataMode="prototypes" style="plain" separatorStyle="none" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="28" sectionFooterHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="iIj-Kh-GNK">
-                                <rect key="frame" x="0.0" y="284" width="375" height="383"/>
+                                <rect key="frame" x="0.0" y="286" width="375" height="293"/>
                                 <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <prototypes>
                                     <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" reuseIdentifier="cell" id="b4d-GC-dH0">
@@ -101,40 +101,49 @@
                                 </connections>
                             </tableView>
                             <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="ZNt-nn-kuI" customClass="BorderedImageView" customModule="aff_song" customModuleProvider="target">
-                                <rect key="frame" x="90" y="49" width="195" height="195"/>
+                                <rect key="frame" x="110" y="50" width="155" height="155"/>
                                 <constraints>
-                                    <constraint firstAttribute="width" constant="195" id="waH-8B-3nr"/>
-                                    <constraint firstAttribute="height" constant="195" id="wyp-NR-QrP"/>
+                                    <constraint firstAttribute="width" constant="155" id="waH-8B-3nr"/>
+                                    <constraint firstAttribute="height" constant="155" id="wyp-NR-QrP"/>
                                 </constraints>
                             </imageView>
-                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="fa3-la-bGZ">
-                                <rect key="frame" x="16" y="24" width="37" height="29"/>
-                                <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                                <fontDescription key="fontDescription" type="system" pointSize="14"/>
-                                <state key="normal" title="Close">
-                                    <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                                </state>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="i8T-P3-0Nv" customClass="RoundedUIButton" customModule="aff_song" customModuleProvider="target">
+                                <rect key="frame" x="139" y="599" width="97" height="48"/>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <color key="tintColor" red="0.98823529409999999" green="0.19215686269999999" blue="0.34901960780000002" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                <inset key="contentEdgeInsets" minX="30" minY="15" maxX="30" maxY="15"/>
+                                <state key="normal" title="Done"/>
                                 <connections>
-                                    <action selector="backButtonClick:" destination="7dN-K8-kAy" eventType="touchUpInside" id="G5E-8L-NYJ"/>
+                                    <action selector="backButtonClick:" destination="7dN-K8-kAy" eventType="touchUpInside" id="5mS-3G-T1k"/>
                                 </connections>
                             </button>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Predicted Emotion:  Valence: Arousal:" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="2" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="EpL-CI-ULi">
+                                <rect key="frame" x="112.5" y="225" width="150" height="41"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <nil key="highlightedColor"/>
+                            </label>
                         </subviews>
                         <color key="backgroundColor" red="0.98823529409999999" green="0.19215686269999999" blue="0.34901960780000002" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
-                            <constraint firstItem="iIj-Kh-GNK" firstAttribute="bottom" secondItem="ini-zz-azT" secondAttribute="bottom" id="6SB-DN-7Gw"/>
+                            <constraint firstItem="iIj-Kh-GNK" firstAttribute="top" secondItem="EpL-CI-ULi" secondAttribute="bottom" constant="20" id="99Q-mu-HK8"/>
                             <constraint firstItem="iIj-Kh-GNK" firstAttribute="trailing" secondItem="ini-zz-azT" secondAttribute="trailing" id="9rk-13-ArZ"/>
-                            <constraint firstItem="ZNt-nn-kuI" firstAttribute="top" secondItem="ini-zz-azT" secondAttribute="top" constant="29" id="G9M-Cc-nFl"/>
-                            <constraint firstItem="fa3-la-bGZ" firstAttribute="leading" secondItem="ini-zz-azT" secondAttribute="leading" constant="16" id="QMJ-0L-VQY"/>
-                            <constraint firstItem="fa3-la-bGZ" firstAttribute="top" secondItem="ini-zz-azT" secondAttribute="top" constant="4" id="RYO-LG-bOt"/>
+                            <constraint firstItem="i8T-P3-0Nv" firstAttribute="centerX" secondItem="G5e-bH-Gft" secondAttribute="centerX" id="FyD-sf-DFC"/>
+                            <constraint firstItem="ZNt-nn-kuI" firstAttribute="top" secondItem="ini-zz-azT" secondAttribute="top" constant="30" id="G9M-Cc-nFl"/>
+                            <constraint firstItem="i8T-P3-0Nv" firstAttribute="top" secondItem="iIj-Kh-GNK" secondAttribute="bottom" constant="20" id="GBa-Pc-fPD"/>
+                            <constraint firstItem="EpL-CI-ULi" firstAttribute="top" secondItem="ZNt-nn-kuI" secondAttribute="bottom" constant="20" id="LRD-dp-uAe"/>
+                            <constraint firstItem="ini-zz-azT" firstAttribute="bottom" secondItem="i8T-P3-0Nv" secondAttribute="bottom" constant="20" id="Rfr-vR-gJg"/>
+                            <constraint firstItem="EpL-CI-ULi" firstAttribute="centerX" secondItem="G5e-bH-Gft" secondAttribute="centerX" id="c5z-MZ-rBb"/>
                             <constraint firstItem="ZNt-nn-kuI" firstAttribute="centerX" secondItem="G5e-bH-Gft" secondAttribute="centerX" id="nJd-7H-1yC"/>
                             <constraint firstItem="iIj-Kh-GNK" firstAttribute="leading" secondItem="ini-zz-azT" secondAttribute="leading" id="oYL-Os-jKT"/>
-                            <constraint firstItem="iIj-Kh-GNK" firstAttribute="top" secondItem="ZNt-nn-kuI" secondAttribute="bottom" constant="40" id="om0-fG-c5w"/>
-                            <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="fa3-la-bGZ" secondAttribute="trailing" constant="20" symbolic="YES" id="sA1-zW-XjR"/>
                         </constraints>
                         <viewLayoutGuide key="safeArea" id="ini-zz-azT"/>
                     </view>
                     <connections>
+                        <outlet property="EmotionLabel" destination="EpL-CI-ULi" id="oZa-6I-qwN"/>
+                        <outlet property="ImageView" destination="ZNt-nn-kuI" id="ZmN-D8-3T8"/>
                         <outlet property="TrackTable" destination="iIj-Kh-GNK" id="d0a-2V-aXu"/>
+                        <outlet property="emotionLabel" destination="EpL-CI-ULi" id="8qo-lm-yFr"/>
                         <outlet property="imageView" destination="ZNt-nn-kuI" id="wGG-pn-Lre"/>
                     </connections>
                 </viewController>
@@ -203,7 +212,7 @@
                             <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" verticalCompressionResistancePriority="747" editable="NO" textAlignment="center" selectable="NO" translatesAutoresizingMaskIntoConstraints="NO" id="USS-Yi-a0q">
                                 <rect key="frame" x="20" y="106" width="335" height="413"/>
                                 <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                                <mutableString key="text">You will be presented with an emotion, you are asked to take a photo of yourself emulating this emotion.  A number of recommended songs will be presented, you are asked to rate the recommendations on a scale from 0 to 5.  You are then asked to quantify the emotion of your face in the taken photo on two scales.  A new emotion will then be presented, there are 10 emotions in total.  You are free to stop the study at any time by pressing the ✕ in the top left.  All data is recorded anonymously, no images will be retained.</mutableString>
+                                <string key="text">You will be presented with an emotion, you are asked to take a photo of yourself emulating this emotion.  A number of recommended songs will be presented, you are asked to rate the recommendations on a scale from 0 to 5.  You are then asked to quantify the emotion of your face in the taken photo on two scales.  A new emotion will then be presented, there are 10 emotions in total.  You are free to stop the study at any time by pressing the ✕ in the top left.  All data is recorded anonymously, no images will be retained.</string>
                                 <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="16"/>
                                 <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
