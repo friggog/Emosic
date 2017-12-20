@@ -11,14 +11,16 @@ from keras.models import Sequential, load_model, model_from_json
 from keras.optimizers import SGD, Adam
 from keras.preprocessing import image
 from keras.utils.np_utils import to_categorical
+from keras.utils import plot_model
 from sklearn.utils import class_weight
+from keras.applications.mobilenet import DepthwiseConv2D
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 CLASSIFY = 0
 REGRESS = 1
 
 # OTPIONS #
-BATCH_SIZE = 250 # VGG: 400     MOB: 250
+BATCH_SIZE = 400 # VGG/ALEX: 400
 EPOCHS = 24
 IMAGE_SIZE = 128
 
@@ -109,46 +111,49 @@ def process_data(C_or_R, paths, labels):
 
 def mobilenet_style_model(C_or_R):
     model = Sequential()
-    # CONV BLOCK 1
-    model.add(SeparableConv2D(32, (3, 3), input_shape=(IMAGE_SIZE, IMAGE_SIZE, 3), padding='same', use_bias=False))
-    model.add(BatchNormalization())
-    model.add(Activation('relu'))
-    model.add(SeparableConv2D(32, (3, 3), strides=(2, 2), padding='same', use_bias=False))
-    model.add(BatchNormalization())
-    model.add(Activation('relu'))
-    model.add(GaussianDropout(0.2))
     # CONV BLOCK 2
-    model.add(SeparableConv2D(64, (3, 3), padding='same', use_bias=False))
+    model.add(DepthwiseConv2D(32, (3, 3), padding='same', use_bias=False, input_shape=(IMAGE_SIZE, IMAGE_SIZE, 3)))
     model.add(BatchNormalization())
     model.add(Activation('relu'))
-    model.add(SeparableConv2D(64, (3, 3), strides=(2, 2), padding='same', use_bias=False))
+    model.add(Conv2D(32, (1, 1), strides=(2, 2), padding='same', use_bias=False))
     model.add(BatchNormalization())
     model.add(Activation('relu'))
-    model.add(GaussianDropout(0.2))
-    # CONV BLOCK 3
-    model.add(SeparableConv2D(128, (3, 3), padding='same', use_bias=False))
+    
+    model.add(DepthwiseConv2D(64, (3, 3), padding='same', use_bias=False))
     model.add(BatchNormalization())
     model.add(Activation('relu'))
-    model.add(SeparableConv2D(128, (3, 3), strides=(2, 2), padding='same', use_bias=False))
+    model.add(Conv2D(64, (1, 1), strides=(1, 1), padding='same', use_bias=False))
     model.add(BatchNormalization())
     model.add(Activation('relu'))
-    model.add(GaussianDropout(0.2))
-    # CONV BLOCK 4
-    model.add(SeparableConv2D(256, (3, 3), padding='same', use_bias=False))
+
+    model.add(DepthwiseConv2D(64, (3, 3), padding='same', use_bias=False))
     model.add(BatchNormalization())
     model.add(Activation('relu'))
-    model.add(SeparableConv2D(256, (3, 3), strides=(2, 2), padding='same', use_bias=False))
+    model.add(Conv2D(64, (1, 1), strides=(2, 2), padding='same', use_bias=False))
     model.add(BatchNormalization())
     model.add(Activation('relu'))
-    model.add(GaussianDropout(0.2))
-    # CONV BLOCK 5
-    model.add(SeparableConv2D(512, (3, 3), padding='same', use_bias=False))
+    
+    model.add(DepthwiseConv2D(128, (3, 3), padding='same', use_bias=False))
     model.add(BatchNormalization())
     model.add(Activation('relu'))
-    model.add(SeparableConv2D(512, (3, 3), strides=(2, 2), padding='same', use_bias=False))
+    model.add(Conv2D(128, (1, 1), strides=(1, 1), padding='same', use_bias=False))
     model.add(BatchNormalization())
     model.add(Activation('relu'))
-    model.add(GaussianDropout(0.2))
+    
+    model.add(DepthwiseConv2D(128, (3, 3), padding='same', use_bias=False))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(Conv2D(128, (1, 1), strides=(2, 2), padding='same', use_bias=False))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    
+    model.add(DepthwiseConv2D(256, (3, 3), padding='same', use_bias=False))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(Conv2D(256, (1, 1), strides=(1, 1), padding='same', use_bias=False))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    
     # FLATTEN
     model.add(GlobalAveragePooling2D())
     # DENSE 1
@@ -243,25 +248,31 @@ def vgg_style_model(C_or_R):
 def alexnet_style_model(C_or_R):
     model = Sequential()
     # CONV BLOCK 1
-    model.add(Conv2D(64, (7, 7), input_shape=(IMAGE_SIZE, IMAGE_SIZE, 3), padding='same', use_bias=False))
+    model.add(Conv2D(16, (9, 9), input_shape=(IMAGE_SIZE, IMAGE_SIZE, 3), padding='same', use_bias=False))
     model.add(BatchNormalization())
     model.add(Activation('relu'))
     model.add(MaxPooling2D(pool_size=(2, 2), padding='same'))
     model.add(GaussianDropout(0.2))
     # CONV BLOCK 2
-    model.add(Conv2D(128, (5, 5), padding='same', use_bias=False))
+    model.add(Conv2D(32, (7, 7), padding='same', use_bias=False))
     model.add(BatchNormalization())
     model.add(Activation('relu'))
     model.add(MaxPooling2D(pool_size=(2, 2), padding='same'))
     model.add(GaussianDropout(0.2))
     # CONV BLOCK 3
-    model.add(Conv2D(256, (3, 3), padding='same', use_bias=False))
+    model.add(Conv2D(64, (5, 5), padding='same', use_bias=False))
     model.add(BatchNormalization())
     model.add(Activation('relu'))
     model.add(MaxPooling2D(pool_size=(2, 2), padding='same'))
     model.add(GaussianDropout(0.2))
     # CONV BLOCK 4
-    model.add(Conv2D(512, (3, 3), padding='same', use_bias=False))
+    model.add(Conv2D(128, (3, 3), padding='same', use_bias=False))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2), padding='same'))
+    model.add(GaussianDropout(0.2))
+    # CONV BLOCK 5
+    model.add(Conv2D(128, (3, 3), padding='same', use_bias=False))
     model.add(BatchNormalization())
     model.add(Activation('relu'))
     model.add(MaxPooling2D(pool_size=(2, 2), padding='same'))
@@ -321,6 +332,8 @@ def load_and_save():
             model.layers.remove(layer)
     model.save('M_VGG/C_T_S.h5')
 
+def visualise(model, name):
+    plot_model(model, to_file=name+'.png', show_shapes=True, show_layer_names=False)
 
 def train(C_or_R, model, name):
     print('** LOADING DATA **')
@@ -364,5 +377,6 @@ if __name__ == '__main__':
     # load_and_save()
     # eval('M_VGG/C_T_S.h5', CLASSIFY)
     # train(CLASSIFY, vgg_style_model(CLASSIFY), 'M_VGG/C')
-    # train(CLASSIFY, alexnet_style_model(CLASSIFY), 'M_ALEX/C')
-    train(CLASSIFY, mobilenet_style_model(CLASSIFY), 'M_MOB/C')
+    train(CLASSIFY, alexnet_style_model(CLASSIFY), 'M_ALEX/C')
+    # train(CLASSIFY, mobilenet_style_model(CLASSIFY), 'M_MOB/C')
+    # visualise(vgg_style_model(CLASSIFY), 'M_VGG/C')
