@@ -1,23 +1,29 @@
+#! /usr/local/bin/python3
+
 import csv
 import os
 from math import floor
 
 import numpy as np
 from keras.callbacks import LearningRateScheduler, ModelCheckpoint
-from keras.layers import (Activation, AveragePooling2D, BatchNormalization, Conv2D, Conv3D, Dense, Dropout, Flatten, MaxPooling2D, MaxPooling3D)
-from keras.models import Sequential, model_from_json, load_model
+from keras.layers import Activation, AveragePooling2D, BatchNormalization, Conv2D, Conv3D, Dense, Dropout, Flatten, GaussianDropout, GlobalAveragePooling2D, MaxPooling2D, MaxPooling3D, SeparableConv2D
+from keras.models import Sequential, load_model, model_from_json
 from keras.optimizers import SGD, Adam
 from keras.preprocessing import image
 from keras.utils.np_utils import to_categorical
+from keras.utils import plot_model
 from sklearn.utils import class_weight
+from keras.applications.mobilenet import DepthwiseConv2D
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 CLASSIFY = 0
 REGRESS = 1
 
 # OTPIONS #
-BATCH_SIZE = 400
+BATCH_SIZE = 400 # VGG/ALEX: 400
 EPOCHS = 24
+IMAGE_SIZE = 128
+
 
 def load_images(C_or_R, paths, labels, batch_size=32, eval=False):
     batch_n = 0
@@ -28,9 +34,9 @@ def load_images(C_or_R, paths, labels, batch_size=32, eval=False):
             if batch_n * batch_size + i > len(paths) - 1:
                 batch_n = 0
             path = paths[batch_n * batch_size + i]
-            img = image.load_img(path, target_size=(96, 96))
+            img = image.load_img(path, target_size=(IMAGE_SIZE, IMAGE_SIZE))
+            x = image.img_to_array(img) / 255
             if not eval:
-                x = image.img_to_array(img) / 255
                 x = image.random_rotation(x, 20)
                 x = image.random_shift(x, 0.1, 0.1)
                 if np.random.random() < 0.5:
@@ -38,7 +44,7 @@ def load_images(C_or_R, paths, labels, batch_size=32, eval=False):
             y = labels[batch_n * batch_size + i]
             batch_d.append(x)
             batch_l.append(y)
-        batch_d = np.array(batch_d).reshape((batch_size, 96, 96, 3))
+        batch_d = np.array(batch_d).reshape((batch_size, IMAGE_SIZE, IMAGE_SIZE, 3))
         if C_or_R == CLASSIFY:
             batch_l = np.array(batch_l).reshape((batch_size, 8))
         else:
@@ -87,7 +93,7 @@ def process_data(C_or_R, paths, labels):
             paths_out.append(paths[i])
         else:
             if arousal == -2 or valence == -2:
-                # ignore invalid values
+                # ignore invalid values
                 continue
             labels_out.append([valence, arousal])
             paths_out.append(paths[i])
@@ -103,49 +109,60 @@ def process_data(C_or_R, paths, labels):
     return paths_out, labels_out, weights
 
 
-def base_model(C_or_R):
+def mobilenet_style_model(C_or_R):
     model = Sequential()
-    # CONV BLOCK 1
-    model.add(Conv2D(32, (3, 3), input_shape=(96, 96, 3)))
-    model.add(BatchNormalization(axis=-1))
-    model.add(Activation('relu'))
-    model.add(Conv2D(32, (3, 3)))
-    model.add(BatchNormalization(axis=-1))
-    model.add(Activation('relu'))
-    model.add(MaxPooling2D(pool_size=(2, 2)))
     # CONV BLOCK 2
-    model.add(Conv2D(64, (3, 3)))
-    model.add(BatchNormalization(axis=-1))
+    model.add(DepthwiseConv2D(32, (3, 3), padding='same', use_bias=False, input_shape=(IMAGE_SIZE, IMAGE_SIZE, 3)))
+    model.add(BatchNormalization())
     model.add(Activation('relu'))
-    model.add(Conv2D(64, (3, 3)))
-    model.add(BatchNormalization(axis=-1))
+    model.add(Conv2D(32, (1, 1), strides=(2, 2), padding='same', use_bias=False))
+    model.add(BatchNormalization())
     model.add(Activation('relu'))
-    model.add(MaxPooling2D(pool_size=(2, 2)))
-    # CONV BLOCK 3
-    model.add(Conv2D(128, (3, 3)))
-    model.add(BatchNormalization(axis=-1))
+    
+    model.add(DepthwiseConv2D(64, (3, 3), padding='same', use_bias=False))
+    model.add(BatchNormalization())
     model.add(Activation('relu'))
-    model.add(Conv2D(128, (3, 3)))
-    model.add(BatchNormalization(axis=-1))
+    model.add(Conv2D(64, (1, 1), strides=(1, 1), padding='same', use_bias=False))
+    model.add(BatchNormalization())
     model.add(Activation('relu'))
-    model.add(MaxPooling2D(pool_size=(2, 2)))
-    # CONV BLOCK 4
-    model.add(Conv2D(256, (3, 3)))
-    model.add(BatchNormalization(axis=-1))
+
+    model.add(DepthwiseConv2D(64, (3, 3), padding='same', use_bias=False))
+    model.add(BatchNormalization())
     model.add(Activation('relu'))
-    model.add(Conv2D(256, (3, 3)))
-    model.add(BatchNormalization(axis=-1))
+    model.add(Conv2D(64, (1, 1), strides=(2, 2), padding='same', use_bias=False))
+    model.add(BatchNormalization())
     model.add(Activation('relu'))
-    model.add(MaxPooling2D(pool_size=(2,2)))
+    
+    model.add(DepthwiseConv2D(128, (3, 3), padding='same', use_bias=False))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(Conv2D(128, (1, 1), strides=(1, 1), padding='same', use_bias=False))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    
+    model.add(DepthwiseConv2D(128, (3, 3), padding='same', use_bias=False))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(Conv2D(128, (1, 1), strides=(2, 2), padding='same', use_bias=False))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    
+    model.add(DepthwiseConv2D(256, (3, 3), padding='same', use_bias=False))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(Conv2D(256, (1, 1), strides=(1, 1), padding='same', use_bias=False))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    
     # FLATTEN
-    model.add(Flatten())
+    model.add(GlobalAveragePooling2D())
     # DENSE 1
-    model.add(Dense(1024))
+    model.add(Dense(1024, use_bias=False))
     model.add(BatchNormalization())
     model.add(Activation('relu'))
     model.add(Dropout(0.5))
     # DENSE 2
-    model.add(Dense(1024))
+    model.add(Dense(1024, use_bias=False))
     model.add(BatchNormalization())
     model.add(Activation('relu'))
     model.add(Dropout(0.5))
@@ -159,74 +176,166 @@ def base_model(C_or_R):
     return model
 
 
-def fine_tune_model(C_or_R):
-    if C_or_R == REGRESS:
-        model = base_model(CLASSIFY, 256)
-        model.load_weights('OUT_256D.h5')
-        # REMOVE CLASSIFIER LAYER
-        model.layers.pop()
-        model.outputs = [model.layers[-1].output]
-        model.layers[-1].outbound_nodes = []
-        # OUTPUT
-        model.add(Dense(2, activation='linear'))
-        model.compile(loss='mean_squared_error', optimizer='adam')
-    else:
-        model = base_model(C_or_R, 256)
-        model.load_weights('OUT_256D.h5')
-        # REMOVE DENSE LAYERS
-        for i in range(9):
-            model.layers.pop()
-        model.outputs = [model.layers[-1].output]
-        model.layers[-1].outbound_nodes = []
-        # DENSE 1
-        model.add(Dense(256))
-        model.add(BatchNormalization())
-        model.add(Activation('relu'))
-        model.add(Dropout(0.5))
-        # # DENSE 2
-        model.add(Dense(256))
-        model.add(BatchNormalization())
-        model.add(Activation('relu'))
-        model.add(Dropout(0.5))
-        # OUTPUT
+def vgg_style_model(C_or_R):
+    model = Sequential()
+    # CONV BLOCK 1
+    model.add(Conv2D(16, (3, 3), input_shape=(IMAGE_SIZE, IMAGE_SIZE, 3), padding='same', use_bias=False))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(Conv2D(16, (3, 3), padding='same', use_bias=False))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2), padding='same'))
+    model.add(GaussianDropout(0.2))
+    # CONV BLOCK 2
+    model.add(Conv2D(32, (3, 3), padding='same', use_bias=False))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(Conv2D(32, (3, 3), padding='same', use_bias=False))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2), padding='same'))
+    model.add(GaussianDropout(0.2))
+    # CONV BLOCK 3
+    model.add(Conv2D(64, (3, 3), padding='same', use_bias=False))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(Conv2D(64, (3, 3), padding='same', use_bias=False))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2), padding='same'))
+    model.add(GaussianDropout(0.2))
+    # CONV BLOCK 4
+    model.add(Conv2D(128, (3, 3), padding='same', use_bias=False))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(Conv2D(128, (3, 3), padding='same', use_bias=False))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2), padding='same'))
+    model.add(GaussianDropout(0.2))
+    # CONV BLOCK 5
+    model.add(Conv2D(128, (3, 3), padding='same', use_bias=False))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(Conv2D(128, (3, 3), padding='same', use_bias=False))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2), padding='same'))
+    model.add(GaussianDropout(0.2))
+    # FLATTEN
+    model.add(Flatten())
+    # DENSE 1
+    model.add(Dense(1024, use_bias=False))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(Dropout(0.5))
+    # DENSE 2
+    model.add(Dense(1024, use_bias=False))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(Dropout(0.5))
+    # OUTPUT
+    if C_or_R == CLASSIFY:
         model.add(Dense(8, activation='softmax'))
         model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+    else:
+        model.add(Dense(2, activation='linear'))
+        model.compile(loss='mean_squared_error', optimizer='adam')
     return model
 
 
-def eval(C_or_R):
+def alexnet_style_model(C_or_R):
+    model = Sequential()
+    # CONV BLOCK 1
+    model.add(Conv2D(16, (9, 9), input_shape=(IMAGE_SIZE, IMAGE_SIZE, 3), padding='same', use_bias=False))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2), padding='same'))
+    model.add(GaussianDropout(0.2))
+    # CONV BLOCK 2
+    model.add(Conv2D(32, (7, 7), padding='same', use_bias=False))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2), padding='same'))
+    model.add(GaussianDropout(0.2))
+    # CONV BLOCK 3
+    model.add(Conv2D(64, (5, 5), padding='same', use_bias=False))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2), padding='same'))
+    model.add(GaussianDropout(0.2))
+    # CONV BLOCK 4
+    model.add(Conv2D(128, (3, 3), padding='same', use_bias=False))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2), padding='same'))
+    model.add(GaussianDropout(0.2))
+    # CONV BLOCK 5
+    model.add(Conv2D(128, (3, 3), padding='same', use_bias=False))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2), padding='same'))
+    model.add(GaussianDropout(0.2))
+    # FLATTEN
+    model.add(Flatten())
+    # DENSE 1
+    model.add(Dense(1024, use_bias=False))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(Dropout(0.5))
+    # DENSE 2
+    model.add(Dense(1024, use_bias=False))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(Dropout(0.5))
+    # OUTPUT
+    if C_or_R == CLASSIFY:
+        model.add(Dense(8, activation='softmax'))
+        model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+    else:
+        model.add(Dense(2, activation='linear'))
+        model.compile(loss='mean_squared_error', optimizer='adam')
+    return model
+
+
+def regressor_from_classifier(model):
+    # REMOVE CLASSIFIER LAYER
+    model.layers.pop()
+    model.outputs = [model.layers[-1].output]
+    model.layers[-1].outbound_nodes = []
+    # ADD REGRESSOR OUTPUT
+    model.add(Dense(2, activation='linear'))
+    model.compile(loss='mean_squared_error', optimizer='adam')
+    return model
+
+
+def eval(name, C_or_R):
     # model = base_model(C_or_R, 256)
-    model = load_model('1/AFF_NET_C_O.h5')
+    model = load_model(name)
     # for layer in model.layers:
-        # if type(layer) is Dropout:
-            # model.layers.remove(layer)
+    # if type(layer) is Dropout:
+    # model.layers.remove(layer)
     v_paths = np.load('validation_paths.npy')
     v_labels = np.load('validation_labels.npy')
     v_paths, v_labels, v_weights = process_data(C_or_R, v_paths, v_labels)
-    res = model.evaluate_generator(load_images(C_or_R, v_paths, v_labels, BATCH_SIZE, eval=True), 
+    res = model.evaluate_generator(load_images(C_or_R, v_paths, v_labels, BATCH_SIZE, eval=True),
                                    steps=len(v_labels) // BATCH_SIZE)
     print('Accuracy:', res[1])
-    
-    
+
+
 def load_and_save():
-    # with open ('.', 'r') as json:
-    #     data = ''.join(json.readlines())
-    #     model = model_from_json(data)
-    # model = load_model('AFF_NET_R_WIP.h5')
-    model = base_model(REGRESS)
-    # model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
-    model.load_weights('AFF_NET_R_WIP.h5')
+    model = vgg_style_model(CLASSIFY)
+    model.load_weights('M_VGG/C_T.h5')
     for layer in model.layers:
-        if type(layer) is Dropout:
+        if type(layer) is Dropout or type(layer) is GaussianDropout:
             model.layers.remove(layer)
-    model.save('AFF_NET_R_O.h5')
+    model.save('M_VGG/C_T_S.h5')
 
-def train(C_or_R, mode=0):
-    if mode == 0:
-        model = base_model(C_or_R)
-    else:
-        model = fine_tune_model(C_or_R)
+def visualise(model, name):
+    plot_model(model, to_file=name+'.png', show_shapes=True, show_layer_names=False)
 
+def train(C_or_R, model, name):
     print('** LOADING DATA **')
     t_paths = np.load('training_paths.npy')
     t_labels = np.load('training_labels.npy')
@@ -234,43 +343,40 @@ def train(C_or_R, mode=0):
     v_paths = np.load('validation_paths.npy')
     v_labels = np.load('validation_labels.npy')
     v_paths, v_labels, v_weights = process_data(C_or_R, v_paths, v_labels)
-
     print('** FITTING MODEL **')
     if C_or_R == CLASSIFY:
-        ns = 'C'
-        model.fit_generator(
+        history = model.fit_generator(
             load_images(C_or_R, t_paths, t_labels, BATCH_SIZE),
             steps_per_epoch=len(t_labels) // BATCH_SIZE,
             class_weight=t_weights,
             epochs=EPOCHS,
             validation_data=load_images(C_or_R, v_paths, v_labels, BATCH_SIZE, eval=True),
             validation_steps=len(v_labels) // BATCH_SIZE,
-            callbacks=[ModelCheckpoint('AFF_NET_C_WIP.h5', monitor='val_acc', save_best_only=True)])
+            callbacks=[ModelCheckpoint(name + '_T.h5', monitor='val_acc', save_best_only=True)])
     else:
-        ns = 'R'
-        model.fit_generator(
+        history = model.fit_generator(
             load_images(C_or_R, t_paths, t_labels, BATCH_SIZE, eval=True),
             steps_per_epoch=len(t_labels) // BATCH_SIZE,
             epochs=EPOCHS,
             validation_data=load_images(C_or_R, v_paths, v_labels, BATCH_SIZE, eval=True),
             validation_steps=len(v_labels) // BATCH_SIZE,
-            callbacks=[ModelCheckpoint('AFF_NET_R_WIP.h5', save_best_only=True)])
-
+            callbacks=[ModelCheckpoint(name + '_T.h5', save_best_only=True)])
     print('** EXPORTING MODEL **')
+    np.save(name + '_HIST', history.history)
     for layer in model.layers:
         if type(layer) is Dropout:
             model.layers.remove(layer)
     model_json = model.to_json()
-    with open('AFF_NET_' + ns + '_ARCH.json', 'w') as json_file:
+    with open(name + '_ARCH.json', 'w') as json_file:
         json_file.write(model_json)
-    model.save_weights('AFF_NET_' + ns + '_WEIGHTS.h5')
-    model.save('AFF_NET_' + ns + '_FULL.h5')
+    model.save_weights(name + '_WEIGHTS.h5')
+    model.save(name + '_FULL.h5')
 
-# eval(CLASSIFY)
-# 
-# train(REGRESS, mode=1)
-# load_and_save()
-# eval(CLASSIFY)
 
 if __name__ == '__main__':
-    train(CLASSIFY, mode=0)
+    # load_and_save()
+    # eval('M_VGG/C_T_S.h5', CLASSIFY)
+    # train(CLASSIFY, vgg_style_model(CLASSIFY), 'M_VGG/C')
+    train(CLASSIFY, alexnet_style_model(CLASSIFY), 'M_ALEX/C')
+    # train(CLASSIFY, mobilenet_style_model(CLASSIFY), 'M_MOB/C')
+    # visualise(vgg_style_model(CLASSIFY), 'M_VGG/C')

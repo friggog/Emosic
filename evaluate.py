@@ -1,3 +1,5 @@
+#! /usr/local/bin/python3
+
 import os
 import sys
 from math import sqrt
@@ -13,6 +15,8 @@ from net import process_data
 CLASSIFY = 0
 REGRESS = 1
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+
+IMAGE_SIZE = 128
 
 
 def RMSE(t, p):
@@ -73,9 +77,9 @@ def get_classifier_predictions(model, paths, labels):
     labels_p_r = []
     count = 0
     for i, path in enumerate(paths):
-        img = image.load_img(path, target_size=(96, 96))
+        img = image.load_img(path, target_size=(IMAGE_SIZE, IMAGE_SIZE))
         img = image.img_to_array(img) / 255
-        img = np.array(img).reshape((1, 96, 96, 3))
+        img = np.array(img).reshape((1, IMAGE_SIZE, IMAGE_SIZE, 3))
         labels_t_r.append(labels[i])
         labels_t.append(np.argmax(labels[i]))
         p = model.predict(img)
@@ -96,9 +100,9 @@ def get_regressor_predictions(model, paths, labels):
     arousal_p = []
     count = 0
     for i, path in enumerate(paths):
-        img = image.load_img(path, target_size=(96, 96))
+        img = image.load_img(path, target_size=(IMAGE_SIZE, IMAGE_SIZE))
         img = image.img_to_array(img) / 255
-        img = np.array(img).reshape((1, 96, 96, 3))
+        img = np.array(img).reshape((1, IMAGE_SIZE, IMAGE_SIZE, 3))
         valence_t.append(labels[i][0])
         arousal_t.append(labels[i][1])
         p = model.predict(img)
@@ -139,24 +143,21 @@ def eval(c_path=None, r_path=None):
         print('CCC'.ljust(20), str(CCC(valence_t, valence_p)).ljust(20), CCC(arousal_t, arousal_p))
 
 if __name__ == '__main__':
-    try:
-        if len(sys.argv) == 3:
-            if sys.argv[1] == '-c':
-                eval(c_path=sys.argv[2])
-            elif sys.argv[1] == '-r':
-                eval(r_path=sys.argv[2])  
-            else:
-                raise Exception()          
-        elif len(sys.argv) == 5:
-            c_path=None
-            r_path=None
-            if sys.argv[1] == '-c':
-                eval(c_path=sys.argv[2], r_path=sys.argv[4])
-            elif sys.argv[1] == '-r':
-                eval(r_path=sys.argv[2], c_path=sys.argv[4])
-            else:
-                raise Exception()
+    if len(sys.argv) == 3:
+        if sys.argv[1] == '-c':
+            eval(c_path=sys.argv[2])
+        elif sys.argv[1] == '-r':
+            eval(r_path=sys.argv[2])  
+        else:
+            raise Exception()          
+    elif len(sys.argv) == 5:
+        c_path=None
+        r_path=None
+        if sys.argv[1] == '-c':
+            eval(c_path=sys.argv[2], r_path=sys.argv[4])
+        elif sys.argv[1] == '-r':
+            eval(r_path=sys.argv[2], c_path=sys.argv[4])
         else:
             raise Exception()
-    except:
-        print('Invalid input, must be -c [path] or -r [path] or both')
+    else:
+        raise Exception()
