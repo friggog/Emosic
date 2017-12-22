@@ -146,7 +146,9 @@ class ResultsViewController: AffUIViewController, UITableViewDataSource, UITable
         default:
             emotionText = "Unknown"
         }
-        EmotionLabel.text =  "Predicted Emtion: \(emotionText!)\n" + String(format: "Valence: %.2f    Arousal: %.2f", valence, arousal)
+        if EmotionLabel != nil {
+            EmotionLabel.text =  "Predicted Emtion: \(emotionText!)\n" + String(format: "Valence: %.2f    Arousal: %.2f", valence, arousal)
+        }
         // prediction are in [-1,1] so map to [0,1]
         return ((valence+1)/2, (arousal+1)/2, emotion)
     }
