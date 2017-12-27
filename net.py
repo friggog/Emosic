@@ -2,26 +2,22 @@
 
 import csv
 import os
-from math import floor
 
 import numpy as np
-from keras.callbacks import LearningRateScheduler, ModelCheckpoint
-from keras.layers import Activation, AveragePooling2D, BatchNormalization, Conv2D, Conv3D, Dense, Dropout, Flatten, GaussianDropout, GlobalAveragePooling2D, MaxPooling2D, MaxPooling3D, SeparableConv2D
-from keras.models import Sequential, load_model, model_from_json
-from keras.optimizers import SGD, Adam
-from keras.preprocessing import image
-from keras.utils.np_utils import to_categorical
-from keras.utils import plot_model
-from sklearn.utils import class_weight
 from keras.applications.mobilenet import DepthwiseConv2D
+from keras.callbacks import ModelCheckpoint
+from keras.layers import Activation, BatchNormalization, Conv2D, Dense, Dropout, Flatten, GaussianDropout, GlobalAveragePooling2D, MaxPooling2D
+from keras.models import Sequential, load_model
+from keras.preprocessing import image
+from keras.utils import plot_model
+from keras.utils.np_utils import to_categorical
+from sklearn.utils import class_weight
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 CLASSIFY = 0
 REGRESS = 1
 
 # OTPIONS #
-BATCH_SIZE = 400 # VGG/ALEX: 400
-EPOCHS = 24
 IMAGE_SIZE = 128
 
 
@@ -35,7 +31,7 @@ def load_images(C_or_R, paths, labels, batch_size=32, eval=False):
                 batch_n = 0
             path = paths[batch_n * batch_size + i]
             img = image.load_img(path, target_size=(IMAGE_SIZE, IMAGE_SIZE))
-            x = image.img_to_array(img) / 255
+            x = image.img_to_array(img) / 256
             if not eval:
                 x = image.random_rotation(x, 20)
                 x = image.random_shift(x, 0.1, 0.1)
@@ -105,67 +101,51 @@ def process_data(C_or_R, paths, labels):
         labels_out = to_categorical(labels_out, num_classes=8)
     else:
         weights = None
+        # print(np.mean(labels_out, axis=0), np.std(labels_out, axis=0))
+        # labels_out = (labels_out - np.mean(labels_out, axis=0)) / np.std(labels_out, axis=0)
+        # labels_out = (labels_out - np.array([0.18190313, 0.08939028])) / np.array([0.50692305, 0.32897222])
     print('Processed:', count)
     return paths_out, labels_out, weights
 
 
-def mobilenet_style_model(C_or_R):
-    model = Sequential()
-    # CONV BLOCK 2
-    model.add(DepthwiseConv2D(32, (3, 3), padding='same', use_bias=False, input_shape=(IMAGE_SIZE, IMAGE_SIZE, 3)))
+def depth_conv_block(model, d, k, s):
+    model.add(DepthwiseConv2D((k, k), strides=(s, s), padding='same', use_bias=False))
     model.add(BatchNormalization())
     model.add(Activation('relu'))
-    model.add(Conv2D(32, (1, 1), strides=(2, 2), padding='same', use_bias=False))
+    model.add(Conv2D(d, (1, 1), padding='same', use_bias=False))
     model.add(BatchNormalization())
     model.add(Activation('relu'))
-    
-    model.add(DepthwiseConv2D(64, (3, 3), padding='same', use_bias=False))
-    model.add(BatchNormalization())
-    model.add(Activation('relu'))
-    model.add(Conv2D(64, (1, 1), strides=(1, 1), padding='same', use_bias=False))
-    model.add(BatchNormalization())
-    model.add(Activation('relu'))
+    return model
 
-    model.add(DepthwiseConv2D(64, (3, 3), padding='same', use_bias=False))
+
+def mobilenet_style_model(C_or_R, dropout=0):
+    model = Sequential()
+    alpha = 1
+    # CONV
+    model.add(Conv2D(int(32 * alpha), (3, 3), padding='same', use_bias=False, strides=(2, 2), input_shape=(IMAGE_SIZE, IMAGE_SIZE, 3)))
     model.add(BatchNormalization())
     model.add(Activation('relu'))
-    model.add(Conv2D(64, (1, 1), strides=(2, 2), padding='same', use_bias=False))
-    model.add(BatchNormalization())
-    model.add(Activation('relu'))
-    
-    model.add(DepthwiseConv2D(128, (3, 3), padding='same', use_bias=False))
-    model.add(BatchNormalization())
-    model.add(Activation('relu'))
-    model.add(Conv2D(128, (1, 1), strides=(1, 1), padding='same', use_bias=False))
-    model.add(BatchNormalization())
-    model.add(Activation('relu'))
-    
-    model.add(DepthwiseConv2D(128, (3, 3), padding='same', use_bias=False))
-    model.add(BatchNormalization())
-    model.add(Activation('relu'))
-    model.add(Conv2D(128, (1, 1), strides=(2, 2), padding='same', use_bias=False))
-    model.add(BatchNormalization())
-    model.add(Activation('relu'))
-    
-    model.add(DepthwiseConv2D(256, (3, 3), padding='same', use_bias=False))
-    model.add(BatchNormalization())
-    model.add(Activation('relu'))
-    model.add(Conv2D(256, (1, 1), strides=(1, 1), padding='same', use_bias=False))
-    model.add(BatchNormalization())
-    model.add(Activation('relu'))
-    
+    # DEPTHWISE CONVS
+    model = depth_conv_block(model, int(64 * alpha), 3, 1)
+
+    model = depth_conv_block(model, int(128 * alpha), 3, 2)
+    model = depth_conv_block(model, int(128 * alpha), 3, 1)
+
+    model = depth_conv_block(model, int(256 * alpha), 3, 2)
+    model = depth_conv_block(model, int(256 * alpha), 3, 1)
+
+    model = depth_conv_block(model, int(512 * alpha), 3, 2)
+    model = depth_conv_block(model, int(512 * alpha), 3, 1)
+    model = depth_conv_block(model, int(512 * alpha), 3, 1)
+    model = depth_conv_block(model, int(512 * alpha), 3, 1)
+    model = depth_conv_block(model, int(512 * alpha), 3, 1)
+    model = depth_conv_block(model, int(512 * alpha), 3, 1)
+
+    model = depth_conv_block(model, int(1024 * alpha), 3, 2)
+    model = depth_conv_block(model, int(1024 * alpha), 3, 1)
     # FLATTEN
     model.add(GlobalAveragePooling2D())
-    # DENSE 1
-    model.add(Dense(1024, use_bias=False))
-    model.add(BatchNormalization())
-    model.add(Activation('relu'))
-    model.add(Dropout(0.5))
-    # DENSE 2
-    model.add(Dense(1024, use_bias=False))
-    model.add(BatchNormalization())
-    model.add(Activation('relu'))
-    model.add(Dropout(0.5))
+    model.add(Dropout(dropout))
     # OUTPUT
     if C_or_R == CLASSIFY:
         model.add(Dense(8, activation='softmax'))
@@ -176,7 +156,60 @@ def mobilenet_style_model(C_or_R):
     return model
 
 
-def vgg_style_model(C_or_R):
+def hybrid_style_model(C_or_R, dropout=(0.2, 0.5)):
+    model = Sequential()
+    # INPUT BLOCK
+    model.add(Conv2D(16, (3, 3), input_shape=(IMAGE_SIZE, IMAGE_SIZE, 3), strides=(2, 2), padding='same', use_bias=False))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    # CONV BLOCK 1
+    model = depth_conv_block(model, 32, 3, 1)
+    model = depth_conv_block(model, 32, 3, 1)
+    model.add(MaxPooling2D(pool_size=(2, 2), padding='same'))
+    model.add(GaussianDropout(dropout[0]))
+    # CONV BLOCK 2
+    model = depth_conv_block(model, 64, 3, 1)
+    model = depth_conv_block(model, 64, 3, 1)
+    model.add(MaxPooling2D(pool_size=(2, 2), padding='same'))
+    model.add(GaussianDropout(dropout[0]))
+    # CONV BLOCK 3
+    model = depth_conv_block(model, 128, 3, 1)
+    model = depth_conv_block(model, 128, 3, 1)
+    model.add(MaxPooling2D(pool_size=(2, 2), padding='same'))
+    model.add(GaussianDropout(dropout[0]))
+    # CONV BLOCK 4
+    model = depth_conv_block(model, 256, 3, 1)
+    model = depth_conv_block(model, 256, 3, 1)
+    model.add(MaxPooling2D(pool_size=(2, 2), padding='same'))
+    model.add(GaussianDropout(dropout[0]))
+    # CONV BLOCK 4
+    model = depth_conv_block(model, 512, 3, 1)
+    model = depth_conv_block(model, 512, 3, 1)
+    model.add(MaxPooling2D(pool_size=(2, 2), padding='same'))
+    model.add(GaussianDropout(dropout[0]))
+    # FLATTEN
+    model.add(Flatten())
+    # DENSE 1
+    model.add(Dense(1024, use_bias=False))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(Dropout(dropout[1]))
+    # DENSE 1
+    model.add(Dense(1024, use_bias=False))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(Dropout(dropout[1]))
+    # OUTPUT
+    if C_or_R == CLASSIFY:
+        model.add(Dense(8, activation='softmax'))
+        model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+    else:
+        model.add(Dense(2, activation='linear'))
+        model.compile(loss='mean_squared_error', optimizer='adam')
+    return model
+
+
+def vgg_style_model(C_or_R, dropout=(0.2, 0.5)):
     model = Sequential()
     # CONV BLOCK 1
     model.add(Conv2D(16, (3, 3), input_shape=(IMAGE_SIZE, IMAGE_SIZE, 3), padding='same', use_bias=False))
@@ -186,7 +219,7 @@ def vgg_style_model(C_or_R):
     model.add(BatchNormalization())
     model.add(Activation('relu'))
     model.add(MaxPooling2D(pool_size=(2, 2), padding='same'))
-    model.add(GaussianDropout(0.2))
+    model.add(GaussianDropout(dropout[0]))
     # CONV BLOCK 2
     model.add(Conv2D(32, (3, 3), padding='same', use_bias=False))
     model.add(BatchNormalization())
@@ -195,7 +228,7 @@ def vgg_style_model(C_or_R):
     model.add(BatchNormalization())
     model.add(Activation('relu'))
     model.add(MaxPooling2D(pool_size=(2, 2), padding='same'))
-    model.add(GaussianDropout(0.2))
+    model.add(GaussianDropout(dropout[0]))
     # CONV BLOCK 3
     model.add(Conv2D(64, (3, 3), padding='same', use_bias=False))
     model.add(BatchNormalization())
@@ -204,7 +237,7 @@ def vgg_style_model(C_or_R):
     model.add(BatchNormalization())
     model.add(Activation('relu'))
     model.add(MaxPooling2D(pool_size=(2, 2), padding='same'))
-    model.add(GaussianDropout(0.2))
+    model.add(GaussianDropout(dropout[0]))
     # CONV BLOCK 4
     model.add(Conv2D(128, (3, 3), padding='same', use_bias=False))
     model.add(BatchNormalization())
@@ -213,7 +246,7 @@ def vgg_style_model(C_or_R):
     model.add(BatchNormalization())
     model.add(Activation('relu'))
     model.add(MaxPooling2D(pool_size=(2, 2), padding='same'))
-    model.add(GaussianDropout(0.2))
+    model.add(GaussianDropout(dropout[0]))
     # CONV BLOCK 5
     model.add(Conv2D(128, (3, 3), padding='same', use_bias=False))
     model.add(BatchNormalization())
@@ -222,19 +255,19 @@ def vgg_style_model(C_or_R):
     model.add(BatchNormalization())
     model.add(Activation('relu'))
     model.add(MaxPooling2D(pool_size=(2, 2), padding='same'))
-    model.add(GaussianDropout(0.2))
-    # FLATTEN
+    model.add(GaussianDropout(dropout[0]))
+    # flatten
     model.add(Flatten())
-    # DENSE 1
+    # dense 1
     model.add(Dense(1024, use_bias=False))
     model.add(BatchNormalization())
     model.add(Activation('relu'))
-    model.add(Dropout(0.5))
-    # DENSE 2
+    model.add(Dropout(dropout[1]))
+    # dense 2
     model.add(Dense(1024, use_bias=False))
     model.add(BatchNormalization())
     model.add(Activation('relu'))
-    model.add(Dropout(0.5))
+    model.add(Dropout(dropout[1]))
     # OUTPUT
     if C_or_R == CLASSIFY:
         model.add(Dense(8, activation='softmax'))
@@ -245,50 +278,50 @@ def vgg_style_model(C_or_R):
     return model
 
 
-def alexnet_style_model(C_or_R):
+def alexnet_style_model(C_or_R, dropout=(0.2, 0.5)):
     model = Sequential()
     # CONV BLOCK 1
     model.add(Conv2D(16, (9, 9), input_shape=(IMAGE_SIZE, IMAGE_SIZE, 3), padding='same', use_bias=False))
     model.add(BatchNormalization())
     model.add(Activation('relu'))
     model.add(MaxPooling2D(pool_size=(2, 2), padding='same'))
-    model.add(GaussianDropout(0.2))
+    model.add(GaussianDropout(dropout[0]))
     # CONV BLOCK 2
     model.add(Conv2D(32, (7, 7), padding='same', use_bias=False))
     model.add(BatchNormalization())
     model.add(Activation('relu'))
     model.add(MaxPooling2D(pool_size=(2, 2), padding='same'))
-    model.add(GaussianDropout(0.2))
+    model.add(GaussianDropout(dropout[0]))
     # CONV BLOCK 3
     model.add(Conv2D(64, (5, 5), padding='same', use_bias=False))
     model.add(BatchNormalization())
     model.add(Activation('relu'))
     model.add(MaxPooling2D(pool_size=(2, 2), padding='same'))
-    model.add(GaussianDropout(0.2))
+    model.add(GaussianDropout(dropout[0]))
     # CONV BLOCK 4
     model.add(Conv2D(128, (3, 3), padding='same', use_bias=False))
     model.add(BatchNormalization())
     model.add(Activation('relu'))
     model.add(MaxPooling2D(pool_size=(2, 2), padding='same'))
-    model.add(GaussianDropout(0.2))
+    model.add(GaussianDropout(dropout[0]))
     # CONV BLOCK 5
     model.add(Conv2D(128, (3, 3), padding='same', use_bias=False))
     model.add(BatchNormalization())
     model.add(Activation('relu'))
     model.add(MaxPooling2D(pool_size=(2, 2), padding='same'))
-    model.add(GaussianDropout(0.2))
+    model.add(GaussianDropout(dropout[0]))
     # FLATTEN
     model.add(Flatten())
     # DENSE 1
     model.add(Dense(1024, use_bias=False))
     model.add(BatchNormalization())
     model.add(Activation('relu'))
-    model.add(Dropout(0.5))
+    model.add(Dropout(dropout[1]))
     # DENSE 2
     model.add(Dense(1024, use_bias=False))
     model.add(BatchNormalization())
     model.add(Activation('relu'))
-    model.add(Dropout(0.5))
+    model.add(Dropout(dropout[1]))
     # OUTPUT
     if C_or_R == CLASSIFY:
         model.add(Dense(8, activation='softmax'))
@@ -299,43 +332,32 @@ def alexnet_style_model(C_or_R):
     return model
 
 
-def regressor_from_classifier(model):
+def regressor_from_classifier(model, drop=False):
     # REMOVE CLASSIFIER LAYER
     model.layers.pop()
     model.outputs = [model.layers[-1].output]
     model.layers[-1].outbound_nodes = []
     # ADD REGRESSOR OUTPUT
-    model.add(Dense(2, activation='linear'))
+    if drop:
+        model.add(Dropout(0.3))
+    model.add(Dense(2, activation='linear', name='regressor_output'))
     model.compile(loss='mean_squared_error', optimizer='adam')
     return model
 
 
-def eval(name, C_or_R):
-    # model = base_model(C_or_R, 256)
-    model = load_model(name)
-    # for layer in model.layers:
-    # if type(layer) is Dropout:
-    # model.layers.remove(layer)
-    v_paths = np.load('validation_paths.npy')
-    v_labels = np.load('validation_labels.npy')
-    v_paths, v_labels, v_weights = process_data(C_or_R, v_paths, v_labels)
-    res = model.evaluate_generator(load_images(C_or_R, v_paths, v_labels, BATCH_SIZE, eval=True),
-                                   steps=len(v_labels) // BATCH_SIZE)
-    print('Accuracy:', res[1])
-
-
-def load_and_save():
-    model = vgg_style_model(CLASSIFY)
-    model.load_weights('M_VGG/C_T.h5')
+def load_and_save(model, m):
+    model.load_weights(m + '/C_T.h5')
     for layer in model.layers:
         if type(layer) is Dropout or type(layer) is GaussianDropout:
             model.layers.remove(layer)
-    model.save('M_VGG/C_T_S.h5')
+    model.save(m + '/C_OUT.h5')
+
 
 def visualise(model, name):
-    plot_model(model, to_file=name+'.png', show_shapes=True, show_layer_names=False)
+    plot_model(model, to_file=name + '.png', show_shapes=True, show_layer_names=False)
 
-def train(C_or_R, model, name):
+
+def train(C_or_R, model, name, epochs, batch_size, test=False):
     print('** LOADING DATA **')
     t_paths = np.load('training_paths.npy')
     t_labels = np.load('training_labels.npy')
@@ -344,27 +366,33 @@ def train(C_or_R, model, name):
     v_labels = np.load('validation_labels.npy')
     v_paths, v_labels, v_weights = process_data(C_or_R, v_paths, v_labels)
     print('** FITTING MODEL **')
+    if test:
+        t_steps = 3
+        v_steps = 3
+    else:
+        t_steps = len(t_labels) // batch_size
+        v_steps = len(v_labels) // batch_size
     if C_or_R == CLASSIFY:
         history = model.fit_generator(
-            load_images(C_or_R, t_paths, t_labels, BATCH_SIZE),
-            steps_per_epoch=len(t_labels) // BATCH_SIZE,
+            load_images(C_or_R, t_paths, t_labels, batch_size),
+            steps_per_epoch=t_steps,
             class_weight=t_weights,
-            epochs=EPOCHS,
-            validation_data=load_images(C_or_R, v_paths, v_labels, BATCH_SIZE, eval=True),
-            validation_steps=len(v_labels) // BATCH_SIZE,
+            epochs=epochs,
+            validation_data=load_images(C_or_R, v_paths, v_labels, batch_size, eval=True),
+            validation_steps=v_steps,
             callbacks=[ModelCheckpoint(name + '_T.h5', monitor='val_acc', save_best_only=True)])
     else:
         history = model.fit_generator(
-            load_images(C_or_R, t_paths, t_labels, BATCH_SIZE, eval=True),
-            steps_per_epoch=len(t_labels) // BATCH_SIZE,
-            epochs=EPOCHS,
-            validation_data=load_images(C_or_R, v_paths, v_labels, BATCH_SIZE, eval=True),
-            validation_steps=len(v_labels) // BATCH_SIZE,
+            load_images(C_or_R, t_paths, t_labels, batch_size),
+            steps_per_epoch=t_steps,
+            epochs=epochs,
+            validation_data=load_images(C_or_R, v_paths, v_labels, batch_size, eval=True),
+            validation_steps=v_steps,
             callbacks=[ModelCheckpoint(name + '_T.h5', save_best_only=True)])
     print('** EXPORTING MODEL **')
     np.save(name + '_HIST', history.history)
     for layer in model.layers:
-        if type(layer) is Dropout:
+        if type(layer) is Dropout or type(layer) is GaussianDropout:
             model.layers.remove(layer)
     model_json = model.to_json()
     with open(name + '_ARCH.json', 'w') as json_file:
@@ -374,9 +402,39 @@ def train(C_or_R, model, name):
 
 
 if __name__ == '__main__':
-    # load_and_save()
-    # eval('M_VGG/C_T_S.h5', CLASSIFY)
-    # train(CLASSIFY, vgg_style_model(CLASSIFY), 'M_VGG/C')
-    train(CLASSIFY, alexnet_style_model(CLASSIFY), 'M_ALEX/C')
-    # train(CLASSIFY, mobilenet_style_model(CLASSIFY), 'M_MOB/C')
-    # visualise(vgg_style_model(CLASSIFY), 'M_VGG/C')
+    # model = load_model('M_MOB/C_T.h5', custom_objects={'DepthwiseConv2D': DepthwiseConv2D})
+    # weights = model.layers[-1].get_weights()
+    # model.layers.pop()
+    # model.outputs = [model.layers[-1].output]
+    # model.layers[-1].outbound_nodes = []
+    # model.add(Dropout(0.3))
+    # model.add(Dense(8, activation='softmax'))
+    # model.layers[-1].set_weights(weights)
+    # model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+    # train(CLASSIFY, model, 'M_MOB/C_2', 12, 250)
+    #
+    # model = vgg_style_model(CLASSIFY, dropout=(0.1, 0.3))
+    # model.load_weights('M_VGG/C_T.h5')
+    # train(CLASSIFY, model, 'M_VGG/C_3', 12, 400)
+    #
+    # model = alexnet_style_model(CLASSIFY, dropout=(0.1, 0.3))
+    # model.load_weights('M_ALEX/C_T.h5')
+    # train(CLASSIFY, model, 'M_ALEX/C_3', 12, 400)
+
+    model = load_model('M_VGG/C_2_FULL.h5')
+    train(CLASSIFY, model, 'M_VGG/C_2B', 12, 400)
+    #
+    # model = alexnet_style_model(CLASSIFY)
+    # model.load_weights('M_ALEX/C_OUT.h5')
+    # model = regressor_from_classifier(model)
+    # train(REGRESS, model, 'M_ALEX/R', 16, 400)
+
+    # train(CLASSIFY, hybrid_style_model(CLASSIFY, dropout=(0, 0.5)), 'M_HYB/C', 24, 400)
+
+    # model = load_model('M_HYB/C_T.h5', custom_objects={'DepthwiseConv2D': DepthwiseConv2D})
+    # model = regressor_from_classifier(model)
+    # train(REGRESS, model, 'M_HYB/R', 16, 400)
+
+    # model = load_model('M_MOB/C_OUT.h5', custom_objects={'DepthwiseConv2D': DepthwiseConv2D})
+    # model = regressor_from_classifier(model, drop=True)
+    # train(REGRESS, model, 'M_MOB/R', 16, 250)

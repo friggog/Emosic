@@ -5,11 +5,7 @@ from math import sqrt
 import cv2
 import numpy as np
 from scipy.stats import pearsonr
-from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
-from sklearn.metrics import mean_squared_error, r2_score
-from sklearn.multioutput import MultiOutputRegressor
-from sklearn.svm import SVC, SVR
-from sklearn.tree import DecisionTreeRegressor
+from sklearn.metrics import mean_squared_error
 
 
 def get_subimage(image, centre, theta, w, h):
@@ -88,7 +84,7 @@ def extract_from_landmarks(landmarks):
     #             b = landmarks[j]
     #             f.append(p_dist(a, b))
     # ALL
-    c = np.array(landmarks).mean(axis=0)
+    # c = np.array(landmarks).mean(axis=0)
     for a in landmarks:
         # f.append(p_dist(a, c))
         for b in landmarks:
@@ -198,10 +194,11 @@ def load_data(p, limit=-1):
                 print('Processed:', count, end="\r")
                 if limit > 0 and count == limit:  # TEMP
                     break
-            except:
+            except Exception:
                 continue
     print('\n')
     return featureset, labelset
+
 
 train_f, train_l = load_data('training.csv')
 val_f, val_l = load_data('validation.csv')

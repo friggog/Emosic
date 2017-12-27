@@ -5,11 +5,13 @@ import sys
 from math import sqrt
 
 import numpy as np
+from keras.applications.mobilenet import DepthwiseConv2D
 from keras.models import load_model
 from keras.preprocessing import image
-from sklearn.metrics import (accuracy_score, average_precision_score, cohen_kappa_score, confusion_matrix, f1_score, mean_squared_error, roc_auc_score)
 from scipy.stats import pearsonr
+from sklearn.metrics import accuracy_score, average_precision_score, cohen_kappa_score, confusion_matrix, f1_score, mean_squared_error, roc_auc_score
 
+from kalpha import krippendorff_alpha
 from net import process_data
 
 CLASSIFY = 0
@@ -33,6 +35,10 @@ def F1(t, p):
 
 def KAPPA(t, p):
     return round(cohen_kappa_score(t, p), 4)
+
+
+def ALPHA(t, p):
+    return round(krippendorff_alpha([t, p]), 4)
 
 
 def CORR(t, p):
@@ -113,6 +119,7 @@ def get_regressor_predictions(model, paths, labels):
     print('Done:', count)
     return valence_t, valence_p, arousal_t, arousal_p
 
+
 def eval(c_path=None, r_path=None):
     if c_path is None and r_path is None:
         print('Please specify a model')
@@ -121,18 +128,19 @@ def eval(c_path=None, r_path=None):
     v_labels_r = np.load('validation_labels.npy')
     if c_path is not None:
         print('** CALCULATING **')
-        model = load_model(c_path)
+        model = load_model(c_path, custom_objects={'DepthwiseConv2D': DepthwiseConv2D})
         v_paths, v_labels, _ = process_data(CLASSIFY, v_paths_r, v_labels_r)
         true_l, pred_l, true_r, pred_r = get_classifier_predictions(model, v_paths, v_labels)
         print('** RESULTS **')
         print('ACC'.ljust(20), ACC(true_l, pred_l))
         print('F1'.ljust(20), F1(true_l, pred_l))
         print('KAPPA'.ljust(20), KAPPA(true_l, pred_l))
+        print('ALPHA'.ljust(20), ALPHA(true_l, pred_l))
         print('AUCPR'.ljust(20), AUCPR(true_r, pred_r))
         print('AUC'.ljust(20), AUC(true_r, pred_r))
-    if v_path is not None:
+    if r_path is not None:
         print('** CALCULATING **')
-        model = load_model(r_path)
+        model = load_model(r_path, custom_objects={'DepthwiseConv2D': DepthwiseConv2D})
         v_paths, v_labels, _ = process_data(REGRESS, v_paths_r, v_labels_r)
         valence_t, valence_p, arousal_t, arousal_p = get_regressor_predictions(model, v_paths, v_labels)
         print('** RESULTS **')
@@ -142,17 +150,18 @@ def eval(c_path=None, r_path=None):
         print('SAGR'.ljust(20), str(SAGR(valence_t, valence_p)).ljust(20), SAGR(arousal_t, arousal_p))
         print('CCC'.ljust(20), str(CCC(valence_t, valence_p)).ljust(20), CCC(arousal_t, arousal_p))
 
+
 if __name__ == '__main__':
     if len(sys.argv) == 3:
         if sys.argv[1] == '-c':
             eval(c_path=sys.argv[2])
         elif sys.argv[1] == '-r':
-            eval(r_path=sys.argv[2])  
+            eval(r_path=sys.argv[2])
         else:
-            raise Exception()          
+            raise Exception()
     elif len(sys.argv) == 5:
-        c_path=None
-        r_path=None
+        c_path = None
+        r_path = None
         if sys.argv[1] == '-c':
             eval(c_path=sys.argv[2], r_path=sys.argv[4])
         elif sys.argv[1] == '-r':

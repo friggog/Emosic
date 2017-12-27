@@ -9,7 +9,7 @@ def convert(t, path):
                                                             input_names=['image'],
                                                             image_input_names=['image'],
                                                             output_names=['emotion_p'],
-                                                            image_scale=1/255.0,
+                                                            image_scale=1 / 255.0,
                                                             class_labels=['0', '1', '2', '3', '4', '5', '6', '7'],
                                                             predicted_feature_name='emotion')
         coreml_model.short_description = 'Predicts the emotion present in an image of a human face.'
@@ -19,7 +19,7 @@ def convert(t, path):
         coreml_model = coremltools.converters.keras.convert(path + '/AFF_NET_R_O.h5',
                                                             input_names=['image'],
                                                             image_input_names=['image'],
-                                                            image_scale=1/255.0,
+                                                            image_scale=1 / 255.0,
                                                             output_names=['valence/arousal'],
                                                             predicted_feature_name='emotion')
         coreml_model.short_description = 'Predicts the valence/arousal present in an image of a human face.'
@@ -29,12 +29,14 @@ def convert(t, path):
     coreml_model.license = 'BSD'
     coreml_model.save(path + '/AFF_NET_' + t + '_O.mlmodel')
 
+
 def main(argv):
     if len(argv) == 2:
         if argv[0] == 'C' or argv[0] == 'R':
             convert(argv[0], argv[1])
             return
     raise(Exception('INPUT ERROR'))
+
 
 if __name__ == '__main__':
     main(sys.argv[1:])
