@@ -129,7 +129,7 @@ class ResultsViewController: AffUIViewController, UITableViewDataSource, UITable
             emotionText = "Sad"
             break
         case 3:
-            emotionText = "Suprised"
+            emotionText = "Surprised"
             break
         case 4:
             emotionText = "Afraid"
@@ -141,7 +141,7 @@ class ResultsViewController: AffUIViewController, UITableViewDataSource, UITable
             emotionText = "Angry"
             break
         case 7:
-            emotionText = "Contemptful"
+            emotionText = "Contemptuous"
             break
         default:
             emotionText = "Unknown"
