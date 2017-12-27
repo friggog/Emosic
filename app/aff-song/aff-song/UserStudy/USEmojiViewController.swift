@@ -58,7 +58,7 @@ class USEmojiViewController : AffUIViewController, UIImagePickerControllerDelega
             emotionLabel = 2
             break
         case 5:
-            emotionText = "Suprised"
+            emotionText = "Surprised"
             emotionEmoji = "😮"
             emotionLabel = 3
             break
@@ -78,7 +78,7 @@ class USEmojiViewController : AffUIViewController, UIImagePickerControllerDelega
             emotionLabel = 5
             break
         case 9:
-            emotionText = "Contemptful"
+            emotionText = "Contemptuous"
             emotionEmoji = "🤨"
             emotionLabel = 7
             break
