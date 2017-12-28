@@ -55,13 +55,18 @@ class USStartViewController : AffUIViewController, MFMailComposeViewControllerDe
             self.sendDataEmail(toAddress: url)
         }))
         alert.addAction(UIAlertAction(title: "Delete", style: UIAlertActionStyle.destructive, handler: {action in
-            do {
-                try FileManager.default.removeItem(atPath: filePath)
-                self.makeDataFile()
-            }
-            catch {
-                print("ERROR DELETING")
-            }
+            let alert = UIAlertController(title: "Delete Data", message: "Are you sure you would like to delete all user study data?", preferredStyle: UIAlertControllerStyle.alert)
+            alert.addAction(UIAlertAction(title: "Delete", style: UIAlertActionStyle.destructive, handler: { action in
+                do {
+                    try FileManager.default.moveItem(atPath: filePath, toPath: filePath+".bak")
+                    self.makeDataFile()
+                }
+                catch {
+                    print("ERROR DELETING")
+                }
+            }))
+            alert.addAction(UIAlertAction(title: "Cancel", style: UIAlertActionStyle.cancel, handler: nil))
+            self.present(alert, animated: true, completion: nil)
         }))
         self.present(alert, animated: true, completion: nil)
     }

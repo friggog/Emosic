@@ -107,9 +107,9 @@ class ResultsViewController: AffUIViewController, UITableViewDataSource, UITable
     
     func getAffect(image: UIImage?) -> (Double, Double, Int) {
         // 0: Neutral, 1: Happiness, 2: Sadness, 3: Surprise, 4: Fear, 5: Disgust, 6: Anger, 7: Contempt, 8: None, 9: Uncertain, 10: No-Face
-        let pixelBuffer = image?.pixelBuffer(width: 96, height: 96)
-        let classifier = AFF_NET_C_O()
-        let regressor = AFF_NET_R_O()
+        let pixelBuffer = image?.pixelBuffer(width: 128, height: 128)
+        let classifier = MobAffNetC()
+        let regressor = MobAffNetR()
         guard let predictedEmotion = try? classifier.prediction(image: pixelBuffer!),
               let predictedValArr = try? regressor.prediction(image: pixelBuffer!) else {
             fatalError("Unexpected runtime error.")
