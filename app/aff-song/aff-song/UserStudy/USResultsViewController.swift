@@ -42,7 +42,6 @@ class USResultsViewController: ResultsViewController, UINavigationControllerDele
     
     override func getAffect(image: UIImage?) -> (Double, Double, Int) {
         let (valence, arousal, emotion) : (Double, Double, Int) = super.getAffect(image: image)
-//        print("PREDICTED:", valence, arousal, emotion)
         data!.append("\(valence)")
         data!.append("\(arousal)")
         data!.append("\(emotion)")

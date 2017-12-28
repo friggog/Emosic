@@ -82,11 +82,16 @@ class ResultsViewController: AffUIViewController, UITableViewDataSource, UITable
             genres = "pop,rock"
             // "Error"
         }
-        let urlPath: String = "https://api.spotify.com/v1/recommendations?seed_genres=\(genres!)&valence=\(valence)&energy=\(arousal)&limit=5&market=GB"
+        var mode = 0
+        if valence >= 0 {
+            mode = 1
+        }
+        // map v/a to [0,1]
+        let urlPath: String = "https://api.spotify.com/v1/recommendations?seed_genres=\(genres!)&target_valence=\((valence+1)/2)&target_energy=\((arousal+1)/2)&mode=\(mode)&limit=5&market=GB"
+        print(urlPath)
         var request: URLRequest = URLRequest(url: URL(string: urlPath)!)
         request.httpMethod = "GET"
         request.addValue("Bearer " + authKey, forHTTPHeaderField: "Authorization")
-        
         let session = URLSession.shared
         session.dataTask(with: request) {data, response, err in
             do {
@@ -114,8 +119,8 @@ class ResultsViewController: AffUIViewController, UITableViewDataSource, UITable
               let predictedValArr = try? regressor.prediction(image: pixelBuffer!) else {
             fatalError("Unexpected runtime error.")
         }
-        let valence = predictedValArr.valence_arousal[0].doubleValue
-        let arousal = predictedValArr.valence_arousal[1].doubleValue
+        var valence = predictedValArr.valence_arousal[0].doubleValue
+        var arousal = predictedValArr.valence_arousal[1].doubleValue
         let emotion = Int(predictedEmotion.emotion)!
         var emotionText : String?
         switch emotion {
@@ -147,10 +152,11 @@ class ResultsViewController: AffUIViewController, UITableViewDataSource, UITable
             emotionText = "Unknown"
         }
         if EmotionLabel != nil {
-            EmotionLabel.text =  "Predicted Emtion: \(emotionText!)\n" + String(format: "Valence: %.2f    Arousal: %.2f", valence, arousal)
+            EmotionLabel.text =  "Predicted Emotion: \(emotionText!)\n" + String(format: "Valence: %.2f    Arousal: %.2f", valence, arousal)
         }
-        // prediction are in [-1,1] so map to [0,1]
-        return ((valence+1)/2, (arousal+1)/2, emotion)
+        valence = max(-1, min(1, valence))
+        arousal = max(-1, min(1, arousal))
+        return (valence, arousal, emotion)
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
