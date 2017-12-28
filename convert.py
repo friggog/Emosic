@@ -3,7 +3,7 @@ import sys
 import coremltools
 
 
-def convert(t, path):
+def do(t, path):
     if t == 'C':
         coreml_model = coremltools.converters.keras.convert(path,
                                                             input_names=['image'],
@@ -27,13 +27,13 @@ def convert(t, path):
         coreml_model.output_description['valence/arousal'] = 'Predicted valence and arousal between -1 and 1'
     coreml_model.author = 'Charlie Hewitt'
     coreml_model.license = 'BSD'
-    coreml_model.save(path + '/MobAffNet' + t + '.mlmodel')
+    coreml_model.save('MobAffNet' + t + '.mlmodel')
 
 
 def main(argv):
     if len(argv) == 2:
         if argv[0] == 'C' or argv[0] == 'R':
-            convert(argv[0], argv[1])
+            do(argv[0], argv[1])
             return
     raise(Exception('INPUT ERROR'))
 

@@ -31,7 +31,7 @@ def load_images(C_or_R, paths, labels, batch_size=32, eval=False):
                 batch_n = 0
             path = paths[batch_n * batch_size + i]
             img = image.load_img(path, target_size=(IMAGE_SIZE, IMAGE_SIZE))
-            x = image.img_to_array(img) / 256
+            x = image.img_to_array(img) / 255
             if not eval:
                 x = image.random_rotation(x, 20)
                 x = image.random_shift(x, 0.1, 0.1)
@@ -101,9 +101,19 @@ def process_data(C_or_R, paths, labels):
         labels_out = to_categorical(labels_out, num_classes=8)
     else:
         weights = None
+        # for i, (v, a) in enumerate(labels_out):
+        #    if i % 300 == 0:
+        #        m = np.mean(labels_out, axis=0)
+        #        if abs(m[0]) < 0.05:
+        #            break
+        #    print(m[0], len(labels_out), end='\r')
+        #    if (m[0] > 0 and v > 0) or (m[0] < 0 and v < 0):
+        #        del labels_out[i]
+        #        del paths_out[i]
         # print(np.mean(labels_out, axis=0), np.std(labels_out, axis=0))
-        # labels_out = (labels_out - np.mean(labels_out, axis=0)) / np.std(labels_out, axis=0)
-        # labels_out = (labels_out - np.array([0.18190313, 0.08939028])) / np.array([0.50692305, 0.32897222])
+        # print(len(labels_out))
+        # np.save('balanced_regr_labels', labels_out)
+        # np.save('balanced_regr_paths', paths_out)
     print('Processed:', count)
     return paths_out, labels_out, weights
 
@@ -346,11 +356,11 @@ def regressor_from_classifier(model, drop=False):
 
 
 def load_and_save(model, m):
-    model.load_weights(m + '/C_T.h5')
+    model.load_weights(m + '/R_T.h5')
     for layer in model.layers:
         if type(layer) is Dropout or type(layer) is GaussianDropout:
             model.layers.remove(layer)
-    model.save(m + '/C_OUT.h5')
+    model.save(m + '/R_OUT.h5')
 
 
 def visualise(model, name):
@@ -359,6 +369,11 @@ def visualise(model, name):
 
 def train(C_or_R, model, name, epochs, batch_size, test=False):
     print('** LOADING DATA **')
+    # if C_or_R == REGRESS:
+    #     t_paths = np.load('balanced_regr_paths.npy')
+    #     t_labels = np.load('balanced_regr_labels.npy')
+    #     print('Loaded', len(t_paths), 'balanced training data')
+    # else:
     t_paths = np.load('training_paths.npy')
     t_labels = np.load('training_labels.npy')
     t_paths, t_labels, t_weights = process_data(C_or_R, t_paths, t_labels)
@@ -417,24 +432,13 @@ if __name__ == '__main__':
     # model.load_weights('M_VGG/C_T.h5')
     # train(CLASSIFY, model, 'M_VGG/C_3', 12, 400)
     #
-    # model = alexnet_style_model(CLASSIFY, dropout=(0.1, 0.3))
-    # model.load_weights('M_ALEX/C_T.h5')
-    # train(CLASSIFY, model, 'M_ALEX/C_3', 12, 400)
-
-    model = load_model('M_VGG/C_2_FULL.h5')
-    train(CLASSIFY, model, 'M_VGG/C_2B', 12, 400)
-    #
-    # model = alexnet_style_model(CLASSIFY)
-    # model.load_weights('M_ALEX/C_OUT.h5')
-    # model = regressor_from_classifier(model)
-    # train(REGRESS, model, 'M_ALEX/R', 16, 400)
-
-    # train(CLASSIFY, hybrid_style_model(CLASSIFY, dropout=(0, 0.5)), 'M_HYB/C', 24, 400)
-
-    # model = load_model('M_HYB/C_T.h5', custom_objects={'DepthwiseConv2D': DepthwiseConv2D})
-    # model = regressor_from_classifier(model)
-    # train(REGRESS, model, 'M_HYB/R', 16, 400)
-
-    # model = load_model('M_MOB/C_OUT.h5', custom_objects={'DepthwiseConv2D': DepthwiseConv2D})
-    # model = regressor_from_classifier(model, drop=True)
-    # train(REGRESS, model, 'M_MOB/R', 16, 250)
+    model = vgg_style_model(REGRESS, (0,0))
+    model.load_weights('M_VGG/R_T.h5')
+    load_and_save(model, 'M_VGG')
+    exit()
+    model = alexnet_style_model(CLASSIFY, dropout=(0.1, 0.3))
+    model.load_weights('M_ALEX/C_T.h5')
+    train(CLASSIFY, model, 'M_ALEX/C_3', 12, 400)
+    model = load_model('M_VGG/C_OUT.h5')
+    model = regressor_from_classifier(model)
+    train(REGRESS, model, 'M_VGG/R_2', 16, 400)
