@@ -1,7 +1,7 @@
 #! /usr/local/bin/python3
 
+import csv
 import os
-import sys
 from math import sqrt
 
 import numpy as np
@@ -10,6 +10,7 @@ from keras.models import load_model
 from keras.preprocessing import image
 from scipy.stats import pearsonr
 from sklearn.metrics import accuracy_score, average_precision_score, cohen_kappa_score, confusion_matrix, f1_score, mean_squared_error, roc_auc_score
+from keras.utils.np_utils import to_categorical
 
 from kalpha import krippendorff_alpha
 from net import process_data
@@ -151,22 +152,76 @@ def eval(c_path=None, r_path=None):
         print('CCC'.ljust(20), str(CCC(valence_t, valence_p)).ljust(20), CCC(arousal_t, arousal_p))
 
 
-if __name__ == '__main__':
-    if len(sys.argv) == 3:
-        if sys.argv[1] == '-c':
-            eval(c_path=sys.argv[2])
-        elif sys.argv[1] == '-r':
-            eval(r_path=sys.argv[2])
-        else:
-            raise Exception()
-    elif len(sys.argv) == 5:
-        c_path = None
-        r_path = None
-        if sys.argv[1] == '-c':
-            eval(c_path=sys.argv[2], r_path=sys.argv[4])
-        elif sys.argv[1] == '-r':
-            eval(r_path=sys.argv[2], c_path=sys.argv[4])
-        else:
-            raise Exception()
-    else:
-        raise Exception()
+def eval_from_files(path):
+    true_l = []
+    pred_l = []
+    pred_r = []
+    with open(path + '/Emotion.csv', 'r') as csvfile:
+        reader = csv.reader(csvfile, delimiter=',')
+        for row in reader:
+            if row[0] == '':
+                continue
+            true_l.append(int(row[0]))
+            pred_l.append(int(row[1]))
+            probs = []
+            for i in range(2, len(row)):
+                probs.append(float(row[i]))
+            pred_r.append(probs)
+    true_r = to_categorical(true_l, num_classes=8)
+    print('ACC'.ljust(20), ACC(true_l, pred_l))
+    print('F1'.ljust(20), F1(true_l, pred_l))
+    print('KAPPA'.ljust(20), KAPPA(true_l, pred_l))
+    print('ALPHA'.ljust(20), ALPHA(true_l, pred_l))
+    print('AUCPR'.ljust(20), AUCPR(true_r, pred_r))
+    print('AUC'.ljust(20), AUC(true_r, pred_r))
+    valence_t = []
+    valence_p = []
+    with open(path + '/Valence.csv', 'r') as csvfile:
+        reader = csv.reader(csvfile, delimiter=',')
+        for row in reader:
+            if row[0] == '':
+                continue
+            if row[0] == '0.00.0':
+                valence_t.append(0)
+            else:
+                valence_t.append(float(row[0]))
+            valence_p.append(float(row[1]))
+    arousal_t = []
+    arousal_p = []
+    with open(path + '/Arousal.csv', 'r') as csvfile:
+        reader = csv.reader(csvfile, delimiter=',')
+        for row in reader:
+            if row[0] == '':
+                continue
+            if row[0] == '0.00.0':
+                arousal_t.append(0)
+            else:
+                arousal_t.append(float(row[0]))
+            arousal_p.append(float(row[1]))
+    print(''.ljust(20), 'VALENCE'.ljust(20), 'AROUSAL')
+    print('RMSE'.ljust(20), str(RMSE(valence_t, valence_p)).ljust(20), RMSE(arousal_t, arousal_p))
+    print('CORR'.ljust(20), str(CORR(valence_t, valence_p)).ljust(20), CORR(arousal_t, arousal_p))
+    print('SAGR'.ljust(20), str(SAGR(valence_t, valence_p)).ljust(20), SAGR(arousal_t, arousal_p))
+    print('CCC'.ljust(20), str(CCC(valence_t, valence_p)).ljust(20), CCC(arousal_t, arousal_p))
+
+
+eval_from_files('/Users/charlie/Desktop/us_results')
+# if __name__ == '__main__':
+#     if len(sys.argv) == 3:
+#         if sys.argv[1] == '-c':
+#             eval(c_path=sys.argv[2])
+#         elif sys.argv[1] == '-r':
+#             eval(r_path=sys.argv[2])
+#         else:
+#             raise Exception()
+#     elif len(sys.argv) == 5:
+#         c_path = None
+#         r_path = None
+#         if sys.argv[1] == '-c':
+#             eval(c_path=sys.argv[2], r_path=sys.argv[4])
+#         elif sys.argv[1] == '-r':
+#             eval(r_path=sys.argv[2], c_path=sys.argv[4])
+#         else:
+#             raise Exception()
+#     else:
+#         raise Exception()
