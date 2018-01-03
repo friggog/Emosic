@@ -2,6 +2,7 @@
 
 import csv
 import os
+import sys
 from math import sqrt
 
 import numpy as np
@@ -152,52 +153,47 @@ def eval(c_path=None, r_path=None):
         print('CCC'.ljust(20), str(CCC(valence_t, valence_p)).ljust(20), CCC(arousal_t, arousal_p))
 
 
-def eval_from_files(path):
+def eval_from_file(path):
     true_l = []
     pred_l = []
     pred_r = []
-    with open(path + '/Emotion.csv', 'r') as csvfile:
+    valence_t = []
+    valence_p = []
+    arousal_t = []
+    arousal_p = []
+
+    with open(path, 'r') as csvfile:
         reader = csv.reader(csvfile, delimiter=',')
         for row in reader:
-            if row[0] == '':
+            if row[0] == '' or row[0] == 'id':
                 continue
-            true_l.append(int(row[0]))
-            pred_l.append(int(row[1]))
+            true_l.append(int(row[2]))
+            pred_l.append(int(row[5]))
             probs = []
-            for i in range(2, len(row)):
+            for i in range(6, 13):
                 probs.append(float(row[i]))
             pred_r.append(probs)
+
+            if row[15] == ' 0.00.0' or row[15] == '':
+                valence_t.append(0)
+            else:
+                valence_t.append(float(row[15]))
+            valence_p.append(float(row[3]))
+
+            if len(row) < 17 or (row[16] == ' 0.00.0' or row[16] == ''):
+                arousal_t.append(0)
+            else:
+                arousal_t.append(float(row[16]))
+            arousal_p.append(float(row[4]))
     true_r = to_categorical(true_l, num_classes=8)
+
     print('ACC'.ljust(20), ACC(true_l, pred_l))
     print('F1'.ljust(20), F1(true_l, pred_l))
     print('KAPPA'.ljust(20), KAPPA(true_l, pred_l))
     print('ALPHA'.ljust(20), ALPHA(true_l, pred_l))
     print('AUCPR'.ljust(20), AUCPR(true_r, pred_r))
     print('AUC'.ljust(20), AUC(true_r, pred_r))
-    valence_t = []
-    valence_p = []
-    with open(path + '/Valence.csv', 'r') as csvfile:
-        reader = csv.reader(csvfile, delimiter=',')
-        for row in reader:
-            if row[0] == '':
-                continue
-            if row[0] == '0.00.0':
-                valence_t.append(0)
-            else:
-                valence_t.append(float(row[0]))
-            valence_p.append(float(row[1]))
-    arousal_t = []
-    arousal_p = []
-    with open(path + '/Arousal.csv', 'r') as csvfile:
-        reader = csv.reader(csvfile, delimiter=',')
-        for row in reader:
-            if row[0] == '':
-                continue
-            if row[0] == '0.00.0':
-                arousal_t.append(0)
-            else:
-                arousal_t.append(float(row[0]))
-            arousal_p.append(float(row[1]))
+    print('')
     print(''.ljust(20), 'VALENCE'.ljust(20), 'AROUSAL')
     print('RMSE'.ljust(20), str(RMSE(valence_t, valence_p)).ljust(20), RMSE(arousal_t, arousal_p))
     print('CORR'.ljust(20), str(CORR(valence_t, valence_p)).ljust(20), CORR(arousal_t, arousal_p))
@@ -205,23 +201,24 @@ def eval_from_files(path):
     print('CCC'.ljust(20), str(CCC(valence_t, valence_p)).ljust(20), CCC(arousal_t, arousal_p))
 
 
-eval_from_files('/Users/charlie/Desktop/us_results')
-# if __name__ == '__main__':
-#     if len(sys.argv) == 3:
-#         if sys.argv[1] == '-c':
-#             eval(c_path=sys.argv[2])
-#         elif sys.argv[1] == '-r':
-#             eval(r_path=sys.argv[2])
-#         else:
-#             raise Exception()
-#     elif len(sys.argv) == 5:
-#         c_path = None
-#         r_path = None
-#         if sys.argv[1] == '-c':
-#             eval(c_path=sys.argv[2], r_path=sys.argv[4])
-#         elif sys.argv[1] == '-r':
-#             eval(r_path=sys.argv[2], c_path=sys.argv[4])
-#         else:
-#             raise Exception()
-#     else:
-#         raise Exception()
+if __name__ == '__main__':
+    if len(sys.argv) == 3:
+        if sys.argv[1] == '-c':
+            eval(c_path=sys.argv[2])
+        elif sys.argv[1] == '-r':
+            eval(r_path=sys.argv[2])
+        elif sys.argv[1] == '-f':
+            eval_from_file(sys.argv[2])
+        else:
+            raise Exception()
+    elif len(sys.argv) == 5:
+        c_path = None
+        r_path = None
+        if sys.argv[1] == '-c':
+            eval(c_path=sys.argv[2], r_path=sys.argv[4])
+        elif sys.argv[1] == '-r':
+            eval(r_path=sys.argv[2], c_path=sys.argv[4])
+        else:
+            raise Exception()
+    else:
+        raise Exception()

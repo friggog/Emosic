@@ -25,7 +25,7 @@ class USStartViewController : AffUIViewController, MFMailComposeViewControllerDe
         let filePath = url.path
         if !FileManager.default.fileExists(atPath: filePath) {
             do {
-                try "id, us_emotion, emotion_label, predicted_valence, predicted_arousal, predicted_emotion_label, rating, annotated_valence, annotated_arousal\n".write(toFile: filePath, atomically: false, encoding: .utf8)
+                try "id, us_emotion, emotion_label, predicted_valence, predicted_arousal, predicted_emotion_label, em0prob, em1prob, em2prob, em3prob, em4prob, em5prob, em6prob, em7prob, rating, annotated_valence, annotated_arousal\n".write(toFile: filePath, atomically: false, encoding: .utf8)
             }
             catch {
                 print("ERROR WRITING FILE")
@@ -58,7 +58,7 @@ class USStartViewController : AffUIViewController, MFMailComposeViewControllerDe
             let alert = UIAlertController(title: "Delete Data", message: "Are you sure you would like to delete all user study data?", preferredStyle: UIAlertControllerStyle.alert)
             alert.addAction(UIAlertAction(title: "Delete", style: UIAlertActionStyle.destructive, handler: { action in
                 do {
-                    try FileManager.default.moveItem(atPath: filePath, toPath: filePath+".bak")
+                    try FileManager.default.removeItem(atPath: filePath)
                     self.makeDataFile()
                 }
                 catch {

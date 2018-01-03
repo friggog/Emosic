@@ -40,12 +40,15 @@ class USResultsViewController: ResultsViewController, UINavigationControllerDele
         }
     }
     
-    override func getAffect(image: UIImage?) -> (Double, Double, Int) {
-        let (valence, arousal, emotion) : (Double, Double, Int) = super.getAffect(image: image)
+    override func getAffect(image: UIImage?) -> (Double, Double, Int, [String:Double]) {
+        let (valence, arousal, emotion, emotion_p) = super.getAffect(image: image)
         data!.append("\(valence)")
         data!.append("\(arousal)")
         data!.append("\(emotion)")
-        return (valence, arousal, emotion)
+        for i in 0 ... 7 {
+            data!.append("\(emotion_p["\(i)"] ?? 0)")
+        }
+        return (valence, arousal, emotion, emotion_p)
     }
     
     
