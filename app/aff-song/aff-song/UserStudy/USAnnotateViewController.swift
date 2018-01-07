@@ -44,8 +44,9 @@ class USAnnotateViewController : AffUIViewController {
         let url = URL(fileURLWithPath: path).appendingPathComponent("user_study_data.csv")
         if let fileHandle = try? FileHandle(forWritingTo: url) {
             fileHandle.seekToEndOfFile()
-            for item in data! {
-                if item == data!.last {
+            for i in 0..<data!.count {
+                let item = data![i]
+                if i == data!.count - 1 {
                     fileHandle.write((item).data(using: .utf8)!)
                 }
                 else {

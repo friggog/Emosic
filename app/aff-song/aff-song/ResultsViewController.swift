@@ -21,7 +21,7 @@ class ResultsViewController: AffUIViewController, UITableViewDataSource, UITable
     override func viewDidLoad() {
         super.viewDidLoad()
         ImageView.image = faceImage
-        let (valence, arousal, emotion) = getAffect(image: faceImage)
+        let (valence, arousal, emotion, _) = getAffect(image: faceImage)
         getSongs(valence: valence, arousal: arousal, emotion: emotion, callback: {tracks in
             self.tracks = tracks
             DispatchQueue.main.async {
@@ -110,7 +110,7 @@ class ResultsViewController: AffUIViewController, UITableViewDataSource, UITable
     }
     
     
-    func getAffect(image: UIImage?) -> (Double, Double, Int) {
+    func getAffect(image: UIImage?) -> (Double, Double, Int, [String:Double]) {
         // 0: Neutral, 1: Happiness, 2: Sadness, 3: Surprise, 4: Fear, 5: Disgust, 6: Anger, 7: Contempt, 8: None, 9: Uncertain, 10: No-Face
         let pixelBuffer = image?.pixelBuffer(width: 128, height: 128)
         let classifier = MobAffNetC()
@@ -122,6 +122,7 @@ class ResultsViewController: AffUIViewController, UITableViewDataSource, UITable
         var valence = predictedValArr.valence_arousal[0].doubleValue
         var arousal = predictedValArr.valence_arousal[1].doubleValue
         let emotion = Int(predictedEmotion.emotion)!
+        let emotion_p = predictedEmotion.emotion_p
         var emotionText : String?
         switch emotion {
         case 0:
@@ -156,7 +157,7 @@ class ResultsViewController: AffUIViewController, UITableViewDataSource, UITable
         }
         valence = max(-1, min(1, valence))
         arousal = max(-1, min(1, arousal))
-        return (valence, arousal, emotion)
+        return (valence, arousal, emotion, emotion_p)
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
