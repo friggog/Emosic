@@ -1,4 +1,6 @@
 __pycache__
 .DS_Store
 TFTest.py
-aff-song/aff-song.xcodeproj/xcuserdata
+app/aff-song/aff-song.xcodeproj/xcuserdata/
+app/aff-song/aff-song.xcodeproj/project.xcworkspace/xcuserdata/
+*.xcuserstate

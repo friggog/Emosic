@@ -432,7 +432,7 @@ if __name__ == '__main__':
     # model.load_weights('M_VGG/C_T.h5')
     # train(CLASSIFY, model, 'M_VGG/C_3', 12, 400)
     #
-    model = vgg_style_model(REGRESS, (0,0))
+    model = vgg_style_model(REGRESS, (0, 0))
     model.load_weights('M_VGG/R_T.h5')
     load_and_save(model, 'M_VGG')
     exit()

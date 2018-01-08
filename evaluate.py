@@ -10,7 +10,7 @@ from keras.applications.mobilenet import DepthwiseConv2D
 from keras.models import load_model
 from keras.preprocessing import image
 from scipy.stats import pearsonr
-from sklearn.metrics import accuracy_score, average_precision_score, cohen_kappa_score, confusion_matrix, f1_score, mean_squared_error, roc_auc_score
+from sklearn.metrics import accuracy_score, average_precision_score, cohen_kappa_score, confusion_matrix, f1_score, mean_squared_error, roc_auc_score, classification_report
 from keras.utils.np_utils import to_categorical
 
 from kalpha import krippendorff_alpha
@@ -21,6 +21,30 @@ REGRESS = 1
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 IMAGE_SIZE = 128
+
+EMOTIONS = {
+    0: 'Neutral',
+    1: 'Happy',
+    2: 'Sad',
+    3: 'Surprised',
+    4: 'Afraid',
+    5: 'Disgusted',
+    6: 'Angry',
+    7: 'Contemptuous'
+}
+
+EMOTIONS_S = {
+    0: 'Neutral',
+    1: 'Delighted',
+    2: 'Happy',
+    3: 'Miserable',
+    4: 'Sad',
+    5: 'Surprised',
+    6: 'Angry',
+    7: 'Afraid',
+    8: 'Disgusted',
+    9: 'Contemptuous'
+}
 
 
 def RMSE(t, p):
@@ -136,10 +160,12 @@ def eval(c_path=None, r_path=None):
         print('** RESULTS **')
         print('ACC'.ljust(20), ACC(true_l, pred_l))
         print('F1'.ljust(20), F1(true_l, pred_l))
-        print('KAPPA'.ljust(20), KAPPA(true_l, pred_l))
+        # print('KAPPA'.ljust(20), KAPPA(true_l, pred_l))
         print('ALPHA'.ljust(20), ALPHA(true_l, pred_l))
         print('AUCPR'.ljust(20), AUCPR(true_r, pred_r))
         print('AUC'.ljust(20), AUC(true_r, pred_r))
+        print(confusion_matrix(true_l, pred_l))
+        print(classification_report(true_l, pred_l))
     if r_path is not None:
         print('** CALCULATING **')
         model = load_model(r_path, custom_objects={'DepthwiseConv2D': DepthwiseConv2D})
@@ -161,7 +187,9 @@ def eval_from_file(path):
     valence_p = []
     arousal_t = []
     arousal_p = []
-    ratings = [[], [], [], [], [], [], [], []]
+    ratings = [[], [], [], [], [], [], [], [], [], []]
+    corr_r = []
+    inco_r = []
 
     with open(path, 'r') as csvfile:
         reader = csv.reader(csvfile, delimiter=',')
@@ -169,7 +197,7 @@ def eval_from_file(path):
             if row[0] == '' or row[0] == 'id':
                 continue
 
-            if int(row[1]) != 1 and int(row[1]) != 3:
+            if int(row[1]) != 2 and int(row[1]) != 4:
                 true_l.append(int(row[2]))
                 pred_l.append(int(row[5]))
                 probs = []
@@ -177,21 +205,21 @@ def eval_from_file(path):
                     probs.append(float(row[i]))
                 pred_r.append(probs)
 
-            if row[15] == ' 0.00.0' or row[15] == '':
-                valence_t.append(0)
+            if int(row[2]) == int(row[5]):
+                corr_r.append(float(row[14]))
             else:
-                valence_t.append(float(row[15]))
+                inco_r.append(float(row[14]))
+
+            valence_t.append(float(row[15]))
             valence_p.append(float(row[3]))
 
-            if len(row) < 17 or (row[16] == ' 0.00.0' or row[16] == ''):
-                arousal_t.append(0)
-            else:
-                arousal_t.append(float(row[16]))
+            arousal_t.append(float(row[16]))
             arousal_p.append(float(row[4]))
 
-            ratings[int(row[2])].append(int(float(row[14])))
-    true_r = to_categorical(true_l, num_classes=8)
+            ratings[int(row[1])].append(int(float(row[14])))
 
+    true_r = to_categorical(true_l, num_classes=8)
+    print('*' * 15, 'CLASSIFICATION'.center(20), '*' * 15)
     print('ACC'.ljust(20), ACC(true_l, pred_l))
     print('F1'.ljust(20), F1(true_l, pred_l))
     print('KAPPA'.ljust(20), KAPPA(true_l, pred_l))
@@ -199,18 +227,25 @@ def eval_from_file(path):
     print('AUCPR'.ljust(20), AUCPR(true_r, pred_r))
     print('AUC'.ljust(20), AUC(true_r, pred_r))
     print(confusion_matrix(true_l, pred_l))
+    print(classification_report(true_l, pred_l, target_names=EMOTIONS.values()))
     print('')
+    print('*' * 15, 'REGRESSION'.center(20), '*' * 15)
     print(''.ljust(20), 'VALENCE'.ljust(20), 'AROUSAL')
     print('RMSE'.ljust(20), str(RMSE(valence_t, valence_p)).ljust(20), RMSE(arousal_t, arousal_p))
     print('CORR'.ljust(20), str(CORR(valence_t, valence_p)).ljust(20), CORR(arousal_t, arousal_p))
     print('SAGR'.ljust(20), str(SAGR(valence_t, valence_p)).ljust(20), SAGR(arousal_t, arousal_p))
     print('CCC'.ljust(20), str(CCC(valence_t, valence_p)).ljust(20), CCC(arousal_t, arousal_p))
     print('')
+    print('*' * 15, 'RATINGS'.center(20), '*' * 15)
     t = (0, 0)
     for i, r in enumerate(ratings):
-        print(str(i).ljust(5), np.mean(r))
+        print(EMOTIONS_S[i].ljust(15), np.mean(r))
         t = (t[0] + np.sum(r), t[1] + len(r))
-    print('Total', t[0] / t[1])
+    print('-' * 29)
+    print('Total'.ljust(15), t[0] / t[1])
+    print('')
+    print('Correct'.ljust(15), np.mean(corr_r))
+    print('Incorrect'.ljust(15), np.mean(inco_r))
 
 
 if __name__ == '__main__':
