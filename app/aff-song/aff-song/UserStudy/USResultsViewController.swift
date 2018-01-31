@@ -29,9 +29,19 @@ class USResultsViewController: ResultsViewController, UINavigationControllerDele
     }
     
     @IBAction func ContinueButtonClicked(_ sender: Any) {
-        if (ratingMade) {
+        if ratingMade {
             data!.append("\(StarRatingView.value)")
-            performSegue(withIdentifier: "usAnnotateSegue", sender: self)
+            if emotion == 0 {
+                data!.append("0.0")
+                data!.append("0.0")
+                let vc = USAnnotateViewController()
+                vc.data = data
+                vc.saveData()
+                performSegue(withIdentifier: "usNeutralSegue", sender: self)
+            }
+            else {
+                performSegue(withIdentifier: "usAnnotateSegue", sender: self)
+            }
         }
         else {
             let alert = UIAlertController(title: "Rating Required", message: "Please rate the recommended songs.", preferredStyle: UIAlertControllerStyle.alert)
@@ -50,7 +60,6 @@ class USResultsViewController: ResultsViewController, UINavigationControllerDele
         }
         return (valence, arousal, emotion, emotion_p)
     }
-    
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if segue.identifier == "usAnnotateSegue" {

@@ -22,9 +22,6 @@ class USAnnotateViewController : AffUIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         imageView.image = faceImage!
-        if (emotion! > 6) {
-            ActionButton.titleLabel?.text = "Finish"
-        }
     }
 
     @IBAction func ButtonClicked(_ sender: Any) {

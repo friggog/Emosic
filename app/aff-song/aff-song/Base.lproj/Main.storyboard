@@ -212,7 +212,7 @@
                             <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" verticalCompressionResistancePriority="747" editable="NO" textAlignment="center" selectable="NO" translatesAutoresizingMaskIntoConstraints="NO" id="USS-Yi-a0q">
                                 <rect key="frame" x="20" y="106" width="335" height="413"/>
                                 <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                                <string key="text">You will be presented with an emotion, you are asked to take a photo of yourself emulating this emotion.  A number of recommended songs will be presented, you are asked to rate the recommendations on a scale from 0 to 5.  You are then asked to quantify the emotion of your face in the taken photo on two scales.  A new emotion will then be presented, there are 10 emotions in total.  You are free to stop the study at any time by pressing the ✕ in the top left.  All data is recorded anonymously, no images will be retained.</string>
+                                <mutableString key="text">You will be presented with an emotion, you are asked to take a photo of yourself emulating this emotion.  A number of recommended songs will be presented, you are asked to rate the recommendations on a scale from 1 to 5.  For emotions other than neutral, you are asked to quantify the emotion of your face in the taken photo on two scales.  A new emotion will then be presented, there are 10 emotions in total.  You are free to stop the study at any time by pressing the ✕ in the top left.  All data is recorded anonymously, no images will be retained.</mutableString>
                                 <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="16"/>
                                 <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
@@ -401,9 +401,11 @@
                         <outlet property="TrackTable" destination="06U-Sq-BQO" id="63e-xc-398"/>
                         <outlet property="imageView" destination="TpC-if-knL" id="sG0-FB-mFv"/>
                         <segue destination="02j-bc-Fkp" kind="show" identifier="usAnnotateSegue" id="TBW-P1-dn9"/>
+                        <segue destination="Uqo-0Z-OQY" kind="unwind" identifier="usNeutralSegue" customClass="SlideHorSegue" customModule="aff_song" customModuleProvider="target" unwindAction="unwindToEmojiWithUnwindSegue:" id="wrk-tC-tAd"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="xOe-o9-nXU" userLabel="First Responder" sceneMemberID="firstResponder"/>
+                <exit id="Uqo-0Z-OQY" userLabel="Exit" sceneMemberID="exit"/>
             </objects>
             <point key="canvasLocation" x="1393" y="672"/>
         </scene>
@@ -444,7 +446,7 @@
                                 </connections>
                             </button>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Valence" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="dlY-vI-o9e">
-                                <rect key="frame" x="157.5" y="276.5" width="60.5" height="20.5"/>
+                                <rect key="frame" x="157.5" y="266.5" width="60.5" height="20.5"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <nil key="highlightedColor"/>
@@ -472,7 +474,7 @@
                                 <color key="maximumTrackTintColor" white="1" alpha="0.5" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                             </slider>
                             <slider opaque="NO" contentMode="scaleToFill" verticalHuggingPriority="251" horizontalCompressionResistancePriority="751" verticalCompressionResistancePriority="751" contentHorizontalAlignment="center" contentVerticalAlignment="center" minValue="-1" maxValue="1" translatesAutoresizingMaskIntoConstraints="NO" id="C7a-4Q-BgK">
-                                <rect key="frame" x="40" y="471" width="294" height="30"/>
+                                <rect key="frame" x="41" y="481" width="294" height="30"/>
                                 <color key="tintColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="29" id="8ZJ-Bx-Yqj"/>
@@ -481,9 +483,33 @@
                                 <color key="minimumTrackTintColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <color key="maximumTrackTintColor" white="1" alpha="0.5" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                             </slider>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="252" verticalCompressionResistancePriority="751" text="How positive the emotion is From low (bored, angry) to high (delighted, content)" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="AHS-7j-vmT">
-                                <rect key="frame" x="40.5" y="305" width="294.5" height="29"/>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="253" verticalCompressionResistancePriority="754" text="How positive the emotion is From negative (bored, angry) to positive (delighted, content)" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="AHS-7j-vmT">
+                                <rect key="frame" x="16" y="295" width="343.5" height="29"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="12"/>
+                                <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" verticalCompressionResistancePriority="752" text="+1" textAlignment="right" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="GM0-yN-eaH">
+                                <rect key="frame" x="342" y="350" width="14.5" height="16"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="13"/>
+                                <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" verticalCompressionResistancePriority="753" text="0" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="iHp-Xs-Uqy">
+                                <rect key="frame" x="24.5" y="487" width="8.5" height="16"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="13"/>
+                                <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" verticalCompressionResistancePriority="753" text="-1" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="WHd-Vm-e5o">
+                                <rect key="frame" x="19.5" y="350" width="12.5" height="16"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="13"/>
+                                <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" verticalCompressionResistancePriority="752" text="1" textAlignment="right" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="GVM-TV-fPt">
+                                <rect key="frame" x="343" y="487" width="6" height="16"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="13"/>
                                 <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <nil key="highlightedColor"/>
                             </label>
@@ -492,25 +518,33 @@
                         <constraints>
                             <constraint firstItem="rE9-ON-F5D" firstAttribute="width" secondItem="rE9-ON-F5D" secondAttribute="height" multiplier="1:1" id="19E-IV-4r7"/>
                             <constraint firstItem="4pr-oy-QUs" firstAttribute="top" relation="greaterThanOrEqual" secondItem="C7a-4Q-BgK" secondAttribute="bottom" constant="30" id="1M7-YJ-0Au"/>
+                            <constraint firstItem="C7a-4Q-BgK" firstAttribute="top" secondItem="Mkc-zt-p6x" secondAttribute="bottom" constant="20" id="8zH-kr-WuF"/>
                             <constraint firstItem="C7a-4Q-BgK" firstAttribute="centerX" secondItem="aTw-ob-Rdx" secondAttribute="centerX" id="CtA-Rv-bPC"/>
                             <constraint firstItem="uTN-aD-DzN" firstAttribute="centerX" secondItem="aTw-ob-Rdx" secondAttribute="centerX" id="Iy2-Y6-O1K"/>
-                            <constraint firstItem="dlY-vI-o9e" firstAttribute="top" relation="greaterThanOrEqual" secondItem="rE9-ON-F5D" secondAttribute="bottom" constant="30" id="Jze-Bn-xSa"/>
+                            <constraint firstItem="dlY-vI-o9e" firstAttribute="top" relation="greaterThanOrEqual" secondItem="rE9-ON-F5D" secondAttribute="bottom" constant="20" id="Jze-Bn-xSa"/>
                             <constraint firstItem="FC7-y8-qGI" firstAttribute="leading" secondItem="I92-QM-jwb" secondAttribute="leading" constant="15" id="NSY-j6-CL1"/>
                             <constraint firstItem="dlY-vI-o9e" firstAttribute="centerX" secondItem="aTw-ob-Rdx" secondAttribute="centerX" id="Nah-nL-0sr"/>
+                            <constraint firstItem="C7a-4Q-BgK" firstAttribute="leading" secondItem="iHp-Xs-Uqy" secondAttribute="trailing" constant="10" id="Q9o-OS-8bp"/>
+                            <constraint firstItem="GM0-yN-eaH" firstAttribute="leading" secondItem="KwK-6a-rUu" secondAttribute="trailing" constant="10" id="VDX-g2-0zw"/>
                             <constraint firstItem="Mkc-zt-p6x" firstAttribute="centerX" secondItem="aTw-ob-Rdx" secondAttribute="centerX" id="Wnz-yB-OaH"/>
                             <constraint firstItem="rE9-ON-F5D" firstAttribute="top" secondItem="I92-QM-jwb" secondAttribute="top" constant="50" id="XeD-7r-aQG"/>
                             <constraint firstItem="AHS-7j-vmT" firstAttribute="top" secondItem="dlY-vI-o9e" secondAttribute="bottom" constant="8" id="Y2P-yk-tv2"/>
-                            <constraint firstItem="C7a-4Q-BgK" firstAttribute="top" secondItem="Mkc-zt-p6x" secondAttribute="bottom" constant="10" id="YNz-qo-mOw"/>
+                            <constraint firstItem="iHp-Xs-Uqy" firstAttribute="top" secondItem="Mkc-zt-p6x" secondAttribute="bottom" constant="26" id="YK2-9D-Y0V"/>
                             <constraint firstItem="I92-QM-jwb" firstAttribute="bottom" secondItem="4pr-oy-QUs" secondAttribute="bottom" constant="50" id="eYc-v0-LcS"/>
                             <constraint firstItem="AHS-7j-vmT" firstAttribute="centerX" secondItem="aTw-ob-Rdx" secondAttribute="centerX" id="fWu-Y9-mEd"/>
+                            <constraint firstItem="KwK-6a-rUu" firstAttribute="top" secondItem="AHS-7j-vmT" secondAttribute="bottom" constant="20" id="fXW-sL-s63"/>
                             <constraint firstItem="FC7-y8-qGI" firstAttribute="top" secondItem="I92-QM-jwb" secondAttribute="top" constant="5" id="iWN-c7-gcc"/>
                             <constraint firstItem="KwK-6a-rUu" firstAttribute="centerX" secondItem="aTw-ob-Rdx" secondAttribute="centerX" id="ie7-tK-ZhH"/>
                             <constraint firstItem="uTN-aD-DzN" firstAttribute="centerY" secondItem="aTw-ob-Rdx" secondAttribute="centerY" constant="80" id="j7c-jh-bCi"/>
                             <constraint firstItem="4pr-oy-QUs" firstAttribute="centerX" secondItem="aTw-ob-Rdx" secondAttribute="centerX" id="lCi-cE-ygC"/>
                             <constraint firstItem="uTN-aD-DzN" firstAttribute="top" secondItem="KwK-6a-rUu" secondAttribute="bottom" constant="30" id="lMQ-1o-Scc"/>
+                            <constraint firstItem="WHd-Vm-e5o" firstAttribute="top" secondItem="AHS-7j-vmT" secondAttribute="bottom" constant="26" id="lqg-Nc-HEc"/>
                             <constraint firstItem="rE9-ON-F5D" firstAttribute="centerX" secondItem="aTw-ob-Rdx" secondAttribute="centerX" id="nED-dl-nnT"/>
-                            <constraint firstItem="KwK-6a-rUu" firstAttribute="top" secondItem="AHS-7j-vmT" secondAttribute="bottom" constant="10" id="nKM-wc-XlZ"/>
+                            <constraint firstItem="KwK-6a-rUu" firstAttribute="leading" secondItem="WHd-Vm-e5o" secondAttribute="trailing" constant="10" id="o4g-xc-MvS"/>
+                            <constraint firstItem="GVM-TV-fPt" firstAttribute="leading" secondItem="C7a-4Q-BgK" secondAttribute="trailing" constant="10" id="uMZ-G3-DFo"/>
                             <constraint firstItem="Mkc-zt-p6x" firstAttribute="top" secondItem="uTN-aD-DzN" secondAttribute="bottom" constant="8" id="uin-50-qW0"/>
+                            <constraint firstItem="GM0-yN-eaH" firstAttribute="top" secondItem="AHS-7j-vmT" secondAttribute="bottom" constant="26" id="uzM-pA-GhF"/>
+                            <constraint firstItem="GVM-TV-fPt" firstAttribute="top" secondItem="Mkc-zt-p6x" secondAttribute="bottom" constant="26" id="xUz-ag-iMg"/>
                         </constraints>
                         <viewLayoutGuide key="safeArea" id="I92-QM-jwb"/>
                     </view>
