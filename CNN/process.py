@@ -77,8 +77,8 @@ if __name__ == '__main__':
         process_images('validation.csv')
     if '-l' in sys.argv:
         tp, tl = process_labels('training.csv')
-        np.save(tp, 'training_paths')
-        np.save(tl, 'training_lables')
+        np.save('training_paths', tp)
+        np.save('training_lables', tl)
         vp, vl = process_labels('validation.csv')
-        np.save(vp, 'validation_paths')
-        np.save(vl, 'validation_labels')
+        np.save('validation_paths', vp)
+        np.save('validation_labels', vl)
