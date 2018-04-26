@@ -1,5 +1,4 @@
 import sys
-
 import coremltools
 
 
@@ -32,11 +31,16 @@ def do(t, path):
 
 def main(argv):
     if len(argv) == 2:
-        if argv[0] == 'C' or argv[0] == 'R':
+        if argv[0] == 'c' or argv[0] == 'r':
             do(argv[0], argv[1])
             return
     raise(Exception('INPUT ERROR'))
 
 
 if __name__ == '__main__':
-    main(sys.argv[1:])
+    if len(sys.argv) != 3:
+        print('Usage:')
+        print('python convert.py -c path_to_keras_classifier_model')
+        print('python convert.py -r path_to_keras_regressor_model')
+    else:
+        main(sys.argv[1:])

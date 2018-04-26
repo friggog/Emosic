@@ -1,5 +1,3 @@
-#! /usr/local/bin/python3
-
 import csv
 import os
 import sys
@@ -252,20 +250,14 @@ if __name__ == '__main__':
     if len(sys.argv) == 3:
         if sys.argv[1] == '-c':
             eval(c_path=sys.argv[2])
+            exit()
         elif sys.argv[1] == '-r':
             eval(r_path=sys.argv[2])
+            exit()
         elif sys.argv[1] == '-f':
             eval_from_file(sys.argv[2])
-        else:
-            raise Exception()
-    elif len(sys.argv) == 5:
-        c_path = None
-        r_path = None
-        if sys.argv[1] == '-c':
-            eval(c_path=sys.argv[2], r_path=sys.argv[4])
-        elif sys.argv[1] == '-r':
-            eval(r_path=sys.argv[2], c_path=sys.argv[4])
-        else:
-            raise Exception()
-    else:
-        raise Exception()
+            exit()
+    print('Usage:')
+    print('python evaluate.py -c path_to_classifier_keras_model')
+    print('python evaluate.py -r path_to_regressor_keras_model')
+    print('python evaluate.py -f path_to_user_study_data_file')

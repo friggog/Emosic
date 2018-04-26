@@ -1,6 +1,5 @@
 #! /usr/local/bin/python3
 
-import csv
 import os
 
 import numpy as np
@@ -49,33 +48,6 @@ def load_images(C_or_R, paths, labels, batch_size=32, eval=False):
         batch_n += 1
 
 
-def load_paths(p):
-    labels = []
-    paths = []
-    count = 0
-    with open(p, 'r') as csvfile:
-        r = csv.reader(csvfile, delimiter=',')
-        count = 0
-        for row in r:
-            if 'sub' in row[0]:
-                continue
-            valence = float(row[-2])
-            arousal = float(row[-1])
-            emotion = int(row[-3])
-            path = 'data_p/' + row[0]
-            if emotion > 7 and (arousal == -2 or valence == -2):
-                continue
-            if not os.path.exists(path):
-                print('error: no image')
-                continue
-            labels.append((emotion, valence, arousal))
-            paths.append(path)
-            count += 1
-            print('Loaded:', count, end='\r')
-    print('Loaded:', count)
-    return paths, labels
-
-
 def process_data(C_or_R, paths, labels):
     labels_out = []
     paths_out = []
@@ -101,19 +73,6 @@ def process_data(C_or_R, paths, labels):
         labels_out = to_categorical(labels_out, num_classes=8)
     else:
         weights = None
-        # for i, (v, a) in enumerate(labels_out):
-        #    if i % 300 == 0:
-        #        m = np.mean(labels_out, axis=0)
-        #        if abs(m[0]) < 0.05:
-        #            break
-        #    print(m[0], len(labels_out), end='\r')
-        #    if (m[0] > 0 and v > 0) or (m[0] < 0 and v < 0):
-        #        del labels_out[i]
-        #        del paths_out[i]
-        # print(np.mean(labels_out, axis=0), np.std(labels_out, axis=0))
-        # print(len(labels_out))
-        # np.save('balanced_regr_labels', labels_out)
-        # np.save('balanced_regr_paths', paths_out)
     print('Processed:', count)
     return paths_out, labels_out, weights
 
@@ -369,11 +328,6 @@ def visualise(model, name):
 
 def train(C_or_R, model, name, epochs, batch_size, test=False):
     print('** LOADING DATA **')
-    # if C_or_R == REGRESS:
-    #     t_paths = np.load('balanced_regr_paths.npy')
-    #     t_labels = np.load('balanced_regr_labels.npy')
-    #     print('Loaded', len(t_paths), 'balanced training data')
-    # else:
     t_paths = np.load('training_paths.npy')
     t_labels = np.load('training_labels.npy')
     t_paths, t_labels, t_weights = process_data(C_or_R, t_paths, t_labels)
