@@ -11,8 +11,8 @@ import UIKit
 class SlideHorSegue: UIStoryboardSegue {
     override func perform() {
         //set the ViewControllers for the animation
-        let sourceView = self.source.view as UIView!
-        let destinationView = self.destination.view as UIView!
+        let sourceView = self.source.view as UIView?
+        let destinationView = self.destination.view as UIView?
         let window = UIApplication.shared.delegate?.window!
         window?.insertSubview(destinationView!, belowSubview: sourceView!)
         destinationView?.center = CGPoint(x: (sourceView?.center.x)! + (destinationView?.frame.width)!, y: (sourceView?.center.y)!)

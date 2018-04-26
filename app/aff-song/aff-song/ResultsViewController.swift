@@ -115,10 +115,17 @@ class ResultsViewController: AffUIViewController, UITableViewDataSource, UITable
         let pixelBuffer = image?.pixelBuffer(width: 128, height: 128)
         let classifier = MobAffNetC()
         let regressor = MobAffNetR()
-        guard let predictedEmotion = try? classifier.prediction(image: pixelBuffer!),
-              let predictedValArr = try? regressor.prediction(image: pixelBuffer!) else {
-            fatalError("Unexpected runtime error.")
+        let t1 = Date().timeIntervalSince1970
+        guard let predictedEmotion = try? classifier.prediction(image: pixelBuffer!) else{
+            fatalError("classifier failed")
         }
+        let t2 = Date().timeIntervalSince1970
+        guard let predictedValArr = try? regressor.prediction(image: pixelBuffer!) else {
+            fatalError("regressor failed")
+        }
+        let t3 = Date().timeIntervalSince1970
+        print("Classifier done in:", t2 - t1)
+        print("Regressor done in:", t3 - t2)
         var valence = predictedValArr.valence_arousal[0].doubleValue
         var arousal = predictedValArr.valence_arousal[1].doubleValue
         let emotion = Int(predictedEmotion.emotion)!

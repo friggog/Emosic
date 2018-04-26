@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="13771" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="BYZ-38-t0r">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="14109" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="BYZ-38-t0r">
     <device id="retina4_7" orientation="portrait">
         <adaptation id="fullscreen"/>
     </device>
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="13772"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="14088"/>
         <capability name="Aspect ratio constraints" minToolsVersion="5.1"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
@@ -212,7 +212,7 @@
                             <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" verticalCompressionResistancePriority="747" editable="NO" textAlignment="center" selectable="NO" translatesAutoresizingMaskIntoConstraints="NO" id="USS-Yi-a0q">
                                 <rect key="frame" x="20" y="106" width="335" height="413"/>
                                 <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                                <mutableString key="text">You will be presented with an emotion, you are asked to take a photo of yourself emulating this emotion.  A number of recommended songs will be presented, you are asked to rate the recommendations on a scale from 1 to 5.  For emotions other than neutral, you are asked to quantify the emotion of your face in the taken photo on two scales.  A new emotion will then be presented, there are 10 emotions in total.  You are free to stop the study at any time by pressing the ✕ in the top left.  All data is recorded anonymously, no images will be retained.</mutableString>
+                                <string key="text">You will be presented with an emotion, you are asked to take a photo of yourself emulating this emotion.  A number of recommended songs will be presented, you are asked to rate the recommendations on a scale from 1 to 5.  For emotions other than neutral, you are asked to quantify the emotion of your face in the taken photo on two scales.  A new emotion will then be presented, there are 10 emotions in total.  You are free to stop the study at any time by pressing the ✕ in the top left.  All data is recorded anonymously, no images will be retained.</string>
                                 <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="16"/>
                                 <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
@@ -237,7 +237,7 @@
                     </view>
                     <navigationItem key="navigationItem" id="HRW-O3-Y9W"/>
                     <connections>
-                        <segue destination="dIG-aH-2bA" kind="showDetail" identifier="usStartSegue" action="showViewController:sender:" id="nWJ-tr-s81"/>
+                        <segue destination="dIG-aH-2bA" kind="showDetail" identifier="usStartSegue" id="nWJ-tr-s81"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="YkG-7t-1mr" userLabel="First Responder" sceneMemberID="firstResponder"/>
@@ -554,7 +554,7 @@
                         <outlet property="ValenceSlider" destination="KwK-6a-rUu" id="l18-CF-5fM"/>
                         <outlet property="imageView" destination="rE9-ON-F5D" id="5K6-bf-llN"/>
                         <segue destination="BF5-Y0-rPr" kind="unwind" identifier="usNextSegue" customClass="SlideHorSegue" customModule="aff_song" customModuleProvider="target" unwindAction="unwindToEmojiWithUnwindSegue:" id="7oA-gE-9Px"/>
-                        <segue destination="VHG-fh-CqB" kind="showDetail" identifier="usDoneSegue" action="showViewController:sender:" id="aBb-Hn-f5T"/>
+                        <segue destination="VHG-fh-CqB" kind="showDetail" identifier="usDoneSegue" id="aBb-Hn-f5T"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="qXG-jD-wl1" userLabel="First Responder" sceneMemberID="firstResponder"/>

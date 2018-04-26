@@ -6,5 +6,5 @@ Music recommendation app based on user affect using CNNs for emotion classificat
 
 CNNs trained on [AffectNet](http://mohammadmahoor.com/affectnet/) using [Keras](https://keras.io) and deployed to iOS by conversion to coreML using [coremltools](https://github.com/apple/coremltools).
 
-**Full write up [here](emosic_write_up.pdf).**
+<!--**Full write up [here]().**-->
 
