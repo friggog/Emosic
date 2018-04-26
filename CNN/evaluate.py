@@ -1,3 +1,5 @@
+#! /usr/bin/env python
+
 import csv
 import os
 import sys
@@ -258,6 +260,6 @@ if __name__ == '__main__':
             eval_from_file(sys.argv[2])
             exit()
     print('Usage:')
-    print('python evaluate.py -c path_to_classifier_keras_model')
-    print('python evaluate.py -r path_to_regressor_keras_model')
-    print('python evaluate.py -f path_to_user_study_data_file')
+    print('evaluate.py -c path_to_classifier_keras_model')
+    print('evaluate.py -r path_to_regressor_keras_model')
+    print('evaluate.py -f path_to_user_study_data_file')

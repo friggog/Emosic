@@ -1,7 +1,6 @@
-#! /usr/local/bin/python3
+#! /usr/bin/env python
 
 import os
-
 import numpy as np
 from keras.applications.mobilenet import DepthwiseConv2D
 from keras.callbacks import ModelCheckpoint

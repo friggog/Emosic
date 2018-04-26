@@ -1,3 +1,5 @@
+#! /usr/bin/env python
+
 import csv
 import os
 import cv2
@@ -67,11 +69,11 @@ def process_labels(p):
 if __name__ == '__main__':
     if '-i' not in sys.argv and '-l' not in sys.argv:
         print('Usage:')
-        print('python process.py')
-        print('                   -i    process images from AffectNet training.csv + validation.csv')
-        print('                         requires raw images in data dir and outputs to data_p')
-        print('                   -l    process labels from AffectNet training.csv + validation.csv')
-        print('                         outputs to [training/validation]_[paths/labels].npy')
+        print('process.py')
+        print('           -i    process images from AffectNet training.csv + validation.csv')
+        print('                 requires raw images in data dir and outputs to data_p')
+        print('           -l    process labels from AffectNet training.csv + validation.csv')
+        print('                 outputs to [training/validation]_[paths/labels].npy')
     if '-i' in sys.argv:
         process_images('training.csv')
         process_images('validation.csv')

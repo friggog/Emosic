@@ -1,3 +1,5 @@
+#! /usr/bin/env python
+
 import sys
 import coremltools
 
@@ -40,7 +42,7 @@ def main(argv):
 if __name__ == '__main__':
     if len(sys.argv) != 3:
         print('Usage:')
-        print('python convert.py -c path_to_keras_classifier_model')
-        print('python convert.py -r path_to_keras_regressor_model')
+        print('convert.py -c path_to_keras_classifier_model')
+        print('convert.py -r path_to_keras_regressor_model')
     else:
         main(sys.argv[1:])
