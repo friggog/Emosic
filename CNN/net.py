@@ -125,59 +125,6 @@ def mobilenet_style_model(C_or_R, dropout=0):
     return model
 
 
-def hybrid_style_model(C_or_R, dropout=(0.2, 0.5)):
-    model = Sequential()
-    # INPUT BLOCK
-    model.add(Conv2D(16, (3, 3), input_shape=(IMAGE_SIZE, IMAGE_SIZE, 3), strides=(2, 2), padding='same', use_bias=False))
-    model.add(BatchNormalization())
-    model.add(Activation('relu'))
-    # CONV BLOCK 1
-    model = depth_conv_block(model, 32, 3, 1)
-    model = depth_conv_block(model, 32, 3, 1)
-    model.add(MaxPooling2D(pool_size=(2, 2), padding='same'))
-    model.add(GaussianDropout(dropout[0]))
-    # CONV BLOCK 2
-    model = depth_conv_block(model, 64, 3, 1)
-    model = depth_conv_block(model, 64, 3, 1)
-    model.add(MaxPooling2D(pool_size=(2, 2), padding='same'))
-    model.add(GaussianDropout(dropout[0]))
-    # CONV BLOCK 3
-    model = depth_conv_block(model, 128, 3, 1)
-    model = depth_conv_block(model, 128, 3, 1)
-    model.add(MaxPooling2D(pool_size=(2, 2), padding='same'))
-    model.add(GaussianDropout(dropout[0]))
-    # CONV BLOCK 4
-    model = depth_conv_block(model, 256, 3, 1)
-    model = depth_conv_block(model, 256, 3, 1)
-    model.add(MaxPooling2D(pool_size=(2, 2), padding='same'))
-    model.add(GaussianDropout(dropout[0]))
-    # CONV BLOCK 4
-    model = depth_conv_block(model, 512, 3, 1)
-    model = depth_conv_block(model, 512, 3, 1)
-    model.add(MaxPooling2D(pool_size=(2, 2), padding='same'))
-    model.add(GaussianDropout(dropout[0]))
-    # FLATTEN
-    model.add(Flatten())
-    # DENSE 1
-    model.add(Dense(1024, use_bias=False))
-    model.add(BatchNormalization())
-    model.add(Activation('relu'))
-    model.add(Dropout(dropout[1]))
-    # DENSE 1
-    model.add(Dense(1024, use_bias=False))
-    model.add(BatchNormalization())
-    model.add(Activation('relu'))
-    model.add(Dropout(dropout[1]))
-    # OUTPUT
-    if C_or_R == CLASSIFY:
-        model.add(Dense(8, activation='softmax'))
-        model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
-    else:
-        model.add(Dense(2, activation='linear'))
-        model.compile(loss='mean_squared_error', optimizer='adam')
-    return model
-
-
 def vgg_style_model(C_or_R, dropout=(0.2, 0.5)):
     model = Sequential()
     # CONV BLOCK 1
@@ -315,18 +262,18 @@ def regressor_from_classifier(model, drop=False):
 
 
 def load_and_save(model, m):
-    model.load_weights(m + '/R_T.h5')
+    model.load_weights(m + '.h5')
     for layer in model.layers:
         if type(layer) is Dropout or type(layer) is GaussianDropout:
             model.layers.remove(layer)
-    model.save(m + '/R_OUT.h5')
+    model.save(m + '_out.h5')
 
 
 def visualise(model, name):
     plot_model(model, to_file=name + '.png', show_shapes=True, show_layer_names=False)
 
 
-def train(C_or_R, model, name, epochs, batch_size, test=False):
+def train(C_or_R, model, output_path, epochs, batch_size):
     print('** LOADING DATA **')
     t_paths = np.load('training_paths.npy')
     t_labels = np.load('training_labels.npy')
@@ -335,12 +282,8 @@ def train(C_or_R, model, name, epochs, batch_size, test=False):
     v_labels = np.load('validation_labels.npy')
     v_paths, v_labels, v_weights = process_data(C_or_R, v_paths, v_labels)
     print('** FITTING MODEL **')
-    if test:
-        t_steps = 3
-        v_steps = 3
-    else:
-        t_steps = len(t_labels) // batch_size
-        v_steps = len(v_labels) // batch_size
+    t_steps = len(t_labels) // batch_size
+    v_steps = len(v_labels) // batch_size
     if C_or_R == CLASSIFY:
         history = model.fit_generator(
             load_images(C_or_R, t_paths, t_labels, batch_size),
@@ -349,7 +292,7 @@ def train(C_or_R, model, name, epochs, batch_size, test=False):
             epochs=epochs,
             validation_data=load_images(C_or_R, v_paths, v_labels, batch_size, eval=True),
             validation_steps=v_steps,
-            callbacks=[ModelCheckpoint(name + '_T.h5', monitor='val_acc', save_best_only=True)])
+            callbacks=[ModelCheckpoint(output_path + '_T.h5', monitor='val_acc', save_best_only=True)])
     else:
         history = model.fit_generator(
             load_images(C_or_R, t_paths, t_labels, batch_size),
@@ -357,42 +300,23 @@ def train(C_or_R, model, name, epochs, batch_size, test=False):
             epochs=epochs,
             validation_data=load_images(C_or_R, v_paths, v_labels, batch_size, eval=True),
             validation_steps=v_steps,
-            callbacks=[ModelCheckpoint(name + '_T.h5', save_best_only=True)])
+            callbacks=[ModelCheckpoint(output_path + '_T.h5', save_best_only=True)])
     print('** EXPORTING MODEL **')
-    np.save(name + '_HIST', history.history)
+    np.save(output_path + '_HIST', history.history)
     for layer in model.layers:
         if type(layer) is Dropout or type(layer) is GaussianDropout:
             model.layers.remove(layer)
     model_json = model.to_json()
-    with open(name + '_ARCH.json', 'w') as json_file:
+    with open(output_path + '_ARCH.json', 'w') as json_file:
         json_file.write(model_json)
-    model.save_weights(name + '_WEIGHTS.h5')
-    model.save(name + '_FULL.h5')
+    model.save_weights(output_path + '_WEIGHTS.h5')
+    model.save(output_path + '_FULL.h5')
 
 
 if __name__ == '__main__':
-    # model = load_model('M_MOB/C_T.h5', custom_objects={'DepthwiseConv2D': DepthwiseConv2D})
-    # weights = model.layers[-1].get_weights()
-    # model.layers.pop()
-    # model.outputs = [model.layers[-1].output]
-    # model.layers[-1].outbound_nodes = []
-    # model.add(Dropout(0.3))
-    # model.add(Dense(8, activation='softmax'))
-    # model.layers[-1].set_weights(weights)
-    # model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
-    # train(CLASSIFY, model, 'M_MOB/C_2', 12, 250)
-    #
-    # model = vgg_style_model(CLASSIFY, dropout=(0.1, 0.3))
-    # model.load_weights('M_VGG/C_T.h5')
-    # train(CLASSIFY, model, 'M_VGG/C_3', 12, 400)
-    #
-    model = vgg_style_model(REGRESS, (0, 0))
-    model.load_weights('M_VGG/R_T.h5')
-    load_and_save(model, 'M_VGG')
-    exit()
-    model = alexnet_style_model(CLASSIFY, dropout=(0.1, 0.3))
-    model.load_weights('M_ALEX/C_T.h5')
-    train(CLASSIFY, model, 'M_ALEX/C_3', 12, 400)
-    model = load_model('M_VGG/C_OUT.h5')
-    model = regressor_from_classifier(model)
-    train(REGRESS, model, 'M_VGG/R_2', 16, 400)
+    print('Haven\'t got around to a CLI for this')
+    print('Choose a model from mobilenet_style_model, vgg_style_model, alexnet_style_model')
+    print('C_or_R means classifier or regressor')
+    print('Call train() on the model with appropriate C_or_R, output and train options')
+    print('A pretrained classifier can be loaded and passed to regressor_from_classifier() to get a regression model which can be trained as normal with C_or_R=REGRESS')
+    print('load_and_save() is used to trim unneeded data from a model to get the true output model, give it a fresh initialization of the right mdoel type and path to the trained model')
