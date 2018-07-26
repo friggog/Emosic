@@ -1,7 +1,7 @@
 ![Logo](/icon.png)
 
 # Emosic
-Code for the paper: [CNN-based Facial Affect Analysis on Mobile Devices](TODO).
+Code for the paper: [CNN-based Facial Affect Analysis on Mobile Devices](https://arxiv.org/abs/1807.08775).
 
 Music recommendation app based on user affect using CNNs for emotion classification and valence/arousal regression. Song recommendations made using the [Spotify Web API](https://developer.spotify.com/web-api/). Intended as a proof-of-concept that emotionally intelligent user interfaces are now feasbile on todays high-spec mobile phones.
 
